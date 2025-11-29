@@ -2,7 +2,6 @@ import React from "react";
 import "../../styles/home.css";
 import { Link } from "react-router-dom";
 import mockup from "./assets/mockup.png";
-import { Footer } from "../../components";
 
 function Home() {
   return (
@@ -109,7 +108,6 @@ function Home() {
           <Link to="/copylink">PLAY FRIEND</Link>
         </div>
       </main>
-      <Footer />
     </section>
   );
 }
