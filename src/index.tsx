@@ -1,6 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import "./tailwind.output.css";
+import "./index.css";
 import { PlayComputer, Home, CopyLink, PlayFriend } from "./pages";
 
 const container = document.getElementById("root");

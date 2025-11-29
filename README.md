@@ -6,7 +6,7 @@
 
 <br />
 
-This is a game of Naija Whot built for the web. It has both single and multiplayer features. You can check it out [live here](http://localhost:3000).
+This is a game of Naija Whot built for the web. It has both single and multiplayer features. You can check it out [live here](https://k-whot.vercel.app).
 
 ## Technologies ⚙
 
