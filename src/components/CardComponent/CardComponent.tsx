@@ -128,22 +128,23 @@ function CardComponent({
 
   return (
     <Flipped flipId={shape + number}>
-      <div
-        className={`${style.card} ${isShownState ? style.shown : ""} ${
-          isMine ? style.mine : ""
-        } ${isActiveCard ? "active-card" : ""} ${className || ""}`}
-        style={customStyle}
-        onClick={handleClick}
-      >
-        <div className={style.inner}>
-          <div className={style.front}>
-            <Number number={number} shape={shape} />
-            <Shape shape={shape} />
-            <Number number={number} shape={shape} reverse={true} />
-          </div>
-          <div className={style.back}>
-            <p>WHOT</p>
-            <p>WHOT</p>
+      <div className={style.cardWrapper} onClick={handleClick}>
+        <div
+          className={`${style.card} ${isShownState ? style.shown : ""} ${
+            isMine ? style.mine : ""
+          } ${isActiveCard ? "active-card" : ""} ${className || ""}`}
+          style={customStyle}
+        >
+          <div className={style.inner}>
+            <div className={style.front}>
+              <Number number={number} shape={shape} />
+              <Shape shape={shape} />
+              <Number number={number} shape={shape} reverse={true} />
+            </div>
+            <div className={style.back}>
+              <p>WHOT</p>
+              <p>WHOT</p>
+            </div>
           </div>
         </div>
       </div>
