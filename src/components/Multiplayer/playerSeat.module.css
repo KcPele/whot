@@ -48,6 +48,7 @@
 .verticalWrapper {
   max-height: 500px;
   overflow: hidden;
+  width: 120px;
 }
 
 .horizontal {
@@ -62,6 +63,10 @@
   .horizontalWrapper {
     padding-bottom: 7px;
     max-width: 100%;
+  }
+
+  .verticalWrapper {
+    width: 100px;
   }
 
   .seat.left .horizontalWrapper {
@@ -83,18 +88,36 @@
 
   .seat.left {
     align-items: flex-start;
+    position: relative;
   }
 
   .seat.left .nameTag {
-    align-self: flex-start;
+    position: absolute;
+    top: 16px;
+    left: 0;
+    z-index: 10;
+    background: rgba(0, 0, 0, 0.65);
+  }
+
+  .seat.left .cards {
+    position: relative;
   }
 
   .seat.right {
     align-items: flex-start;
+    position: relative;
   }
 
   .seat.right .nameTag {
-    align-self: flex-start;
+    position: absolute;
+    top: 16px;
+    right: 0;
+    z-index: 10;
+    background: rgba(0, 0, 0, 0.65);
+  }
+
+  .seat.right .cards {
+    position: relative;
   }
 
   .cards.horizontal {
@@ -106,6 +129,16 @@
     max-width: 100%;
     justify-content: center;
     margin-bottom: -4px;
+    font-size: 11px;
+  }
+
+  .seat.left .rotatedName,
+  .seat.right .rotatedName {
+    writing-mode: initial !important;
+    transform: none !important;
+    margin: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
   }
 }
 
