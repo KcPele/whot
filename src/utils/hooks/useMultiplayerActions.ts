@@ -1,6 +1,6 @@
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import type { Card, MultiplayerState, PlayerSeat } from "../../types/game";
-import { playMultiplayerCard, drawCards, getNextPlayerId } from "../functions/playMultiplayerCard";
+
 import randomCard from "../functions/randomCard";
 
 const emptyState: MultiplayerState = {

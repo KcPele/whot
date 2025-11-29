@@ -8,13 +8,11 @@ import {
   performDrawAction,
 } from "../utils/functions/playMultiplayerCard";
 
-const pathname = window.location.pathname;
-const roomId = pathname.slice(pathname.length - 4);
-
 type FriendState = GameState &
   Partial<MultiplayerState> & {
     viewerId?: string;
     isSpectator?: boolean;
+    roomId?: string;
   };
 
 const initialState: FriendState = {
@@ -35,6 +33,7 @@ const initialState: FriendState = {
   isChatOpen: false,
   unreadCount: 0,
   spectators: [],
+  roomId: "",
 };
 
 const reducer: Reducer<FriendState, AnyAction> = (
@@ -54,6 +53,7 @@ const reducer: Reducer<FriendState, AnyAction> = (
         ...(action.payload as Partial<FriendState>),
         viewerId: state.viewerId,
         isSpectator: state.isSpectator,
+        roomId: state.roomId,
       };
     case "SET_LOCAL_STATE":
       return { ...state, ...(action.payload as Partial<FriendState>) };
@@ -72,6 +72,8 @@ const reducer: Reducer<FriendState, AnyAction> = (
     case "INCREMENT_UNREAD_COUNT":
       if (state.isChatOpen) return state;
       return { ...state, unreadCount: (state.unreadCount || 0) + 1 };
+    case "SET_ROOM_ID":
+      return { ...state, roomId: action.payload as string };
     case "PERFORM_GAME_ACTION": {
       const gameAction = action.payload as GameAction;
       // We need to cast state to MultiplayerState to use the utility functions
@@ -133,10 +135,13 @@ const syncMiddleware: Middleware<{}, FriendState> =
   (next) =>
   (action: AnyAction) => {
     const returnValue = next(action);
+    const state = getState();
 
     if (action.type === "PERFORM_GAME_ACTION" && !action.isFromServer) {
       const gameAction = action.payload as GameAction;
-      socket.emit("game_action", gameAction, roomId);
+      if (state.roomId) {
+        socket.emit("game_action", gameAction, state.roomId);
+      }
     }
 
     if (
@@ -146,6 +151,7 @@ const syncMiddleware: Middleware<{}, FriendState> =
       action.type === "TOGGLE_INFO_SHOWN" ||
       action.type === "TOGGLE_CHAT" ||
       action.type === "SET_UNREAD_COUNT" ||
+      action.type === "SET_ROOM_ID" ||
       action.type === "PERFORM_GAME_ACTION" // We handled emission above
     ) {
       return returnValue;

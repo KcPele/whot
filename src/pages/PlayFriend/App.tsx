@@ -102,7 +102,8 @@ function App() {
       localStorage.setItem("storedId", id);
     }
     setStoredId(id);
-  }, []);
+    dispatch({ type: "SET_ROOM_ID", payload: roomId });
+  }, [roomId, dispatch]);
 
   useEffect(() => {
     if (!storedId) return;

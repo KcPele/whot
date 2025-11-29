@@ -32,7 +32,7 @@ const drawCards = (
 
   const players = state.players.map((player) =>
     player.id === targetId
-      ? { ...player, cards: [...player.cards, ...newCards] }
+      ? { ...player, cards: [...newCards, ...player.cards] }
       : player
   );
 
