@@ -21,10 +21,6 @@
   -webkit-overflow-scrolling: touch;
 }
 
-.cards > * {
-  /* flex-shrink: 0; removed as it's not needed for grid */
-}
-
 @media screen and (min-width: 700px) {
   .cards::-webkit-scrollbar {
     height: 4px;
@@ -89,8 +85,16 @@
     align-items: flex-start;
   }
 
+  .seat.left .nameTag {
+    align-self: flex-start;
+  }
+
   .seat.right {
-    align-items: flex-end;
+    align-items: flex-start;
+  }
+
+  .seat.right .nameTag {
+    align-self: flex-start;
   }
 
   .cards.horizontal {
@@ -186,6 +190,51 @@
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
   cursor: pointer;
+}
+
+.rotatedCard {
+  transform: rotate(90deg);
+  margin: 15px 0; /* Add margin to account for rotation */
+}
+
+.placeholder.rotatedCard {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: none;
+  margin: 0;
+}
+
+.rotatedName {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  margin-bottom: 0;
+  margin-left: 10px; /* Adjust spacing */
+}
+
+.seat.left .rotatedName {
+  margin-left: 10px;
+  margin-right: 0;
+}
+
+.seat.right .rotatedName {
+  margin-right: 10px;
+  margin-left: 0;
+}
+
+.seat.left,
+.seat.right {
+  flex-direction: row;
+  align-items: center;
+}
+
+.seat.left {
+  justify-content: flex-start;
+  flex-direction: row-reverse; /* Name closer to center */
+}
+
+.seat.right {
+  justify-content: flex-end;
+  flex-direction: row; /* Name closer to center */
 }
 
 .placeholder {

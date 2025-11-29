@@ -24,6 +24,8 @@ type CardComponentProps = {
   isMarketCard?: boolean;
   onPlay?: () => void;
   disableInteraction?: boolean;
+  className?: string;
+  style?: React.CSSProperties;
 };
 
 function CardComponent({
@@ -36,6 +38,8 @@ function CardComponent({
   isMarketCard,
   onPlay,
   disableInteraction,
+  className,
+  style: customStyle,
 }: CardComponentProps) {
   const [isShownState, setIsShownState] = useState(isShown);
   const [whoIsToPlay, activeCard, userCards, usedCards, opponentCards] =
@@ -127,7 +131,8 @@ function CardComponent({
       <div
         className={`${style.card} ${isShownState ? style.shown : ""} ${
           isMine ? style.mine : ""
-        } ${isActiveCard ? "active-card" : ""}`}
+        } ${isActiveCard ? "active-card" : ""} ${className || ""}`}
+        style={customStyle}
         onClick={handleClick}
       >
         <div className={style.inner}>

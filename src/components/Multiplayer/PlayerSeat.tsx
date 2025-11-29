@@ -37,6 +37,8 @@ const PlayerSeat = ({
     setIsEditing(false);
   };
 
+  const isSideSeat = position === "left" || position === "right";
+
   const renderName = () => {
     if (isViewer && isEditing) {
       return (
@@ -57,26 +59,32 @@ const PlayerSeat = ({
 
     return (
       <button
-        className={`${styles.nameTag} ${isViewer ? styles.clickable : ""}`}
+        className={`${styles.nameTag} ${isViewer ? styles.clickable : ""} ${
+          isSideSeat ? styles.rotatedName : ""
+        }`}
         disabled={!isViewer}
         onClick={() => {
           if (isViewer) setIsEditing(true);
         }}
       >
         <span>{seat?.name || "Waiting..."}</span>
-        <span className={`${styles.status} ${seat?.online ? styles.online : styles.offline}`}>
+        <span
+          className={`${styles.status} ${
+            seat?.online ? styles.online : styles.offline
+          }`}
+        >
           {seat?.online ? "Online" : "Offline"}
         </span>
-        <span className={styles.cardCount}>
-          {seat?.cards.length || 0}
-        </span>
+        <span className={styles.cardCount}>{seat?.cards.length || 0}</span>
         {isTurn && <span className={styles.turn}>Turn</span>}
       </button>
     );
   };
 
   const orientation =
-    position === "top" || position === "bottom" ? styles.horizontal : styles.vertical;
+    position === "top" || position === "bottom"
+      ? styles.horizontal
+      : styles.vertical;
 
   return (
     <div className={`${styles.seat} ${styles[position]}`}>
@@ -91,7 +99,9 @@ const PlayerSeat = ({
         <div className={`${styles.cards} ${orientation}`}>
           {(seat?.cards || []).map((card, index) => (
             <CardComponent
-              key={`${card.shape}-${card.number}-${seat?.id || "placeholder"}-${index}`}
+              key={`${card.shape}-${card.number}-${
+                seat?.id || "placeholder"
+              }-${index}`}
               shape={card.shape}
               number={card.number}
               isMine={isViewer && !isSpectator}
@@ -100,9 +110,18 @@ const PlayerSeat = ({
               onPlay={
                 isViewer && onPlayCard ? () => onPlayCard(card) : undefined
               }
+              className={isSideSeat ? styles.rotatedCard : ""}
             />
           ))}
-          {!seat && <div className={styles.placeholder}>Seat empty</div>}
+          {!seat && (
+            <div
+              className={`${styles.placeholder} ${
+                isSideSeat ? styles.rotatedCard : ""
+              }`}
+            >
+              Seat empty
+            </div>
+          )}
         </div>
       </div>
     </div>
