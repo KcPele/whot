@@ -17,6 +17,7 @@ import socket from "../../socket/socket";
 import { generateRandomCode } from "../../utils/functions/generateRandomCode";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import PlayerSeat from "../../components/Multiplayer/PlayerSeat";
+import SpectatorList from "../../components/Multiplayer/SpectatorList";
 import useMultiplayerActions from "../../utils/hooks/useMultiplayerActions";
 
 const arrangeSeats = (
@@ -90,6 +91,7 @@ function App() {
 
   const handleRename = (name: string) => {
     localStorage.setItem("whot:displayName", name);
+    setStoredName(name);
     socket.emit("update_player_name", { room_id: roomId, storedId, name });
   };
 
@@ -118,6 +120,7 @@ function App() {
 
     const handleReceiveMessage = (message: ChatMessage) => {
       setMessages((prev) => [...prev, message]);
+      dispatch({ type: "INCREMENT_UNREAD_COUNT" });
     };
 
     socket.emit("join_room", {
@@ -130,6 +133,7 @@ function App() {
     socket.on("dispatch", handleDispatch);
     socket.on("error", handleError);
     socket.on("receive_message", handleReceiveMessage);
+    socket.on("chat_history", (history) => setMessages(history));
 
     return () => {
       socket.off("dispatch", handleDispatch);
@@ -152,6 +156,7 @@ function App() {
       id: generateRandomCode(10),
       text,
       senderId: id,
+      senderName: storedName || "Player",
       timestamp: Date.now(),
     };
     setMessages((prev) => [...prev, newMessage]);
@@ -247,6 +252,26 @@ function App() {
           unreadCount={clientState.unreadCount || 0}
           onClick={() => dispatch({ type: "TOGGLE_CHAT" })}
         />
+        <SpectatorList spectators={multiplayerState.spectators || []} />
+        {clientState.isSpectator && (
+          <div style={{ position: "fixed", bottom: 80, right: 20, zIndex: 100 }}>
+             <PlayerSeat
+              seat={{
+                id: storedId,
+                name: storedName || "Spectator",
+                seatIndex: 0 as any,
+                cards: [],
+                online: true,
+                isSpectator: true,
+              }}
+              position="bottom"
+              isViewer={true}
+              isSpectator={true}
+              canPlay={false}
+              onRename={handleRename}
+            />
+          </div>
+        )}
       </div>
     </Flipper>
   );

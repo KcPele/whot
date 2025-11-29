@@ -34,6 +34,7 @@ export interface PlayerSeat {
   seatIndex: SeatIndex;
   cards: Card[];
   online: boolean;
+  isSpectator?: boolean;
 }
 
 export interface MultiplayerState {
@@ -48,12 +49,14 @@ export interface MultiplayerState {
   maxPlayers: number;
   viewerId: string;
   isSpectator?: boolean;
+  spectators: PlayerSeat[];
 }
 
 export interface ChatMessage {
   id: string;
   text: string;
   senderId: string;
+  senderName?: string;
   timestamp: number;
 }
 
@@ -73,3 +76,17 @@ export type GameState = BaseGameState &
   };
 
 export const DEFAULT_CARD: Card = { shape: "circle", number: 1 };
+
+export type GameAction =
+  | {
+      type: "PLAY_CARD";
+      playerId: string;
+      card: Card;
+      consequenceCards?: Card[];
+    }
+  | {
+      type: "DRAW_CARD";
+      playerId: string;
+      cardsDrawn: Card[];
+    };
+

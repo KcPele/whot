@@ -1,6 +1,7 @@
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import type { Card, MultiplayerState, PlayerSeat } from "../../types/game";
 import { playMultiplayerCard, drawCards, getNextPlayerId } from "../functions/playMultiplayerCard";
+import randomCard from "../functions/randomCard";
 
 const emptyState: MultiplayerState = {
   deck: [],
@@ -13,6 +14,33 @@ const emptyState: MultiplayerState = {
   stateHasBeenInitialized: false,
   maxPlayers: 2,
   viewerId: "",
+  spectators: [],
+};
+
+const generateRandomCards = (
+  state: MultiplayerState,
+  count: number,
+  additionalUsedCards: Card[] = []
+): Card[] => {
+  const usedCards = [...state.usedCards, ...additionalUsedCards];
+  const newCards: Card[] = [];
+
+  while (newCards.length < count) {
+    const availableDeck = state.deck.filter(
+      (marketCard) =>
+        !usedCards.some(
+          (used) =>
+            used.shape === marketCard.shape && used.number === marketCard.number
+        )
+    );
+
+    if (availableDeck.length === 0) break;
+
+    const card = randomCard(availableDeck);
+    usedCards.unshift(card);
+    newCards.push(card);
+  }
+  return newCards;
 };
 
 const useMultiplayerActions = () => {
@@ -56,26 +84,37 @@ const useMultiplayerActions = () => {
     if (!viewer || state.isSpectator) return;
     if (!canPlayCard(card)) return;
 
-    const updatedState = playMultiplayerCard(resolvedState, viewer.id, card);
-    dispatch({ type: "SET_LOCAL_STATE", payload: updatedState });
+    let consequenceCards: Card[] = [];
+    if (card.number === 2) {
+      consequenceCards = generateRandomCards(resolvedState, 2, [card]);
+    } else if (card.number === 5) {
+      consequenceCards = generateRandomCards(resolvedState, 3, [card]);
+    } else if (card.number === 14) {
+      consequenceCards = generateRandomCards(resolvedState, 1, [card]);
+    }
+
+    dispatch({
+      type: "PERFORM_GAME_ACTION",
+      payload: {
+        type: "PLAY_CARD",
+        playerId: viewer.id,
+        card,
+        consequenceCards,
+      },
+    });
   };
 
   const drawCard = () => {
     if (!viewer || state.isSpectator || !isViewersTurn) return;
-    const { players, usedCards } = drawCards(resolvedState, viewer.id, 1);
     
-    const nextPlayerId = getNextPlayerId(resolvedState, viewer.id);
-    const nextPlayer = players.find((p) => p.id === nextPlayerId);
-
+    const cardsToDraw = generateRandomCards(resolvedState, 1);
+    
     dispatch({
-      type: "SET_LOCAL_STATE",
+      type: "PERFORM_GAME_ACTION",
       payload: {
-        ...resolvedState,
-        players,
-        usedCards,
-        currentTurnId: nextPlayerId,
-        infoText: `${nextPlayer?.name || "Next"}'s turn`,
-        infoShown: true,
+        type: "DRAW_CARD",
+        playerId: viewer.id,
+        cardsDrawn: cardsToDraw,
       },
     });
   };

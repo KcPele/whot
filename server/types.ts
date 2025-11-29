@@ -43,6 +43,7 @@ export interface MultiplayerState {
   infoShown: boolean;
   stateHasBeenInitialized: boolean;
   maxPlayers: number;
+  spectators: PlayerSeat[];
 }
 
 export interface Room {
@@ -56,5 +57,19 @@ export interface ChatMessage {
   id: string;
   text: string;
   senderId: string;
+  senderName?: string;
   timestamp: number;
 }
+
+export type GameAction =
+  | {
+      type: "PLAY_CARD";
+      playerId: string;
+      card: Card;
+      consequenceCards?: Card[];
+    }
+  | {
+      type: "DRAW_CARD";
+      playerId: string;
+      cardsDrawn: Card[];
+    };

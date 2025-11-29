@@ -1,8 +1,12 @@
 import { applyMiddleware, createStore } from "redux";
 import type { AnyAction, Middleware, Reducer } from "redux";
-import type { GameState, MultiplayerState } from "../types/game";
+import type { GameState, MultiplayerState, GameAction } from "../types/game";
 import { DEFAULT_CARD } from "../types/game";
 import socket from "../socket/socket";
+import {
+  playMultiplayerCard,
+  performDrawAction,
+} from "../utils/functions/playMultiplayerCard";
 
 const pathname = window.location.pathname;
 const roomId = pathname.slice(pathname.length - 4);
@@ -30,9 +34,13 @@ const initialState: FriendState = {
   isSpectator: false,
   isChatOpen: false,
   unreadCount: 0,
+  spectators: [],
 };
 
-const reducer: Reducer<FriendState, AnyAction> = (state = initialState, action) => {
+const reducer: Reducer<FriendState, AnyAction> = (
+  state = initialState,
+  action
+) => {
   switch (action.type) {
     case "INITIALIZE_DECK":
       return {
@@ -61,6 +69,60 @@ const reducer: Reducer<FriendState, AnyAction> = (state = initialState, action) 
       };
     case "SET_UNREAD_COUNT":
       return { ...state, unreadCount: action.payload as number };
+    case "INCREMENT_UNREAD_COUNT":
+      if (state.isChatOpen) return state;
+      return { ...state, unreadCount: (state.unreadCount || 0) + 1 };
+    case "PERFORM_GAME_ACTION": {
+      const gameAction = action.payload as GameAction;
+      // We need to cast state to MultiplayerState to use the utility functions
+      // and then merge the result back.
+      // Note: FriendState has all properties of MultiplayerState (mostly).
+      // We should be careful about properties that might be missing or different.
+      // But based on types, FriendState extends GameState & Partial<MultiplayerState>.
+      // The utility functions expect MultiplayerState.
+      // We can cast state as MultiplayerState if we are sure it has the required fields.
+      // Since stateHasBeenInitialized is true when playing, it should be fine.
+
+      let updatedState: MultiplayerState = state as unknown as MultiplayerState;
+
+      if (gameAction.type === "PLAY_CARD") {
+        updatedState = playMultiplayerCard(
+          updatedState,
+          gameAction.playerId,
+          gameAction.card,
+          gameAction.consequenceCards
+        );
+      } else if (gameAction.type === "DRAW_CARD") {
+        updatedState = performDrawAction(
+          updatedState,
+          gameAction.playerId,
+          gameAction.cardsDrawn
+        );
+      }
+
+      return { ...state, ...updatedState };
+    }
+    case "GAME_ACTION": {
+      const gameAction = action.payload as GameAction;
+      let updatedState: MultiplayerState = state as unknown as MultiplayerState;
+
+      if (gameAction.type === "PLAY_CARD") {
+        updatedState = playMultiplayerCard(
+          updatedState,
+          gameAction.playerId,
+          gameAction.card,
+          gameAction.consequenceCards
+        );
+      } else if (gameAction.type === "DRAW_CARD") {
+        updatedState = performDrawAction(
+          updatedState,
+          gameAction.playerId,
+          gameAction.cardsDrawn
+        );
+      }
+
+      return { ...state, ...updatedState };
+    }
     default:
       return state;
   }
@@ -72,19 +134,29 @@ const syncMiddleware: Middleware<{}, FriendState> =
   (action: AnyAction) => {
     const returnValue = next(action);
 
+    if (action.type === "PERFORM_GAME_ACTION" && !action.isFromServer) {
+      const gameAction = action.payload as GameAction;
+      socket.emit("game_action", gameAction, roomId);
+    }
+
     if (
       action.isFromServer ||
       action.type === "INITIALIZE_DECK" ||
       action.type === "UPDATE_STATE" ||
       action.type === "TOGGLE_INFO_SHOWN" ||
       action.type === "TOGGLE_CHAT" ||
-      action.type === "SET_UNREAD_COUNT"
+      action.type === "SET_UNREAD_COUNT" ||
+      action.type === "PERFORM_GAME_ACTION" // We handled emission above
     ) {
       return returnValue;
     }
 
-    const updatedState = getState();
-    socket.emit("sendUpdatedState", updatedState, roomId);
+    // Legacy sync for other actions (if any left)
+    // We should eventually remove this.
+    // if (action.type === "SET_LOCAL_STATE") {
+    //    const updatedState = getState();
+    //    socket.emit("sendUpdatedState", updatedState, roomId);
+    // }
 
     return returnValue;
   };

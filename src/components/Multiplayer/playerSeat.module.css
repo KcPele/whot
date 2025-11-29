@@ -7,44 +7,42 @@
 }
 
 .cards {
-  display: flex;
-  gap: 10px;
-  padding: 10px;
+  display: grid;
+  gap: 20px;
+  padding-bottom: 15px;
   max-width: 100%;
-  scrollbar-width: thin;
+  overflow: auto;
 }
 
 .cards > * {
-  flex-shrink: 0;
+  /* flex-shrink: 0; removed as it's not needed for grid */
 }
 
-.cards::-webkit-scrollbar {
-  height: 6px;
-  width: 6px;
-}
+@media screen and (min-width: 700px) {
+  .cards::-webkit-scrollbar {
+    height: 4px;
+    width: 4px;
+    border-radius: 15px;
+  }
 
-.cards::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-}
+  .cards::-webkit-scrollbar-track {
+    background-color: transparent;
+  }
 
-.cards::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 10px;
+  .cards::-webkit-scrollbar-thumb {
+    background-color: #c1c1c1;
+    border-radius: 15px;
+  }
 }
 
 .horizontal {
-  flex-direction: row;
-  max-width: 80vw;
-  overflow-x: auto;
-  overflow-y: hidden;
+  grid-auto-flow: column;
+  max-width: 650px;
 }
 
 .vertical {
-  flex-direction: column;
-  max-height: 60vh;
-  overflow-y: auto;
-  overflow-x: hidden;
+  grid-auto-flow: row;
+  max-height: 500px;
 }
 
 .top {

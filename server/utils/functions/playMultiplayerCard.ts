@@ -1,4 +1,5 @@
-import type { Card, MultiplayerState } from "../../types/game";
+import type { MultiplayerState } from "../../types";
+import Card from "../classes/Card";
 
 const getNextPlayerId = (state: MultiplayerState, currentId: string) => {
   const ordered = [...state.players]
@@ -18,21 +19,11 @@ const drawCards = (
   const usedCards = [...state.usedCards];
   const newCards: Card[] = [...cardsToDraw];
 
-  // Add drawn cards to usedCards to track them (if that's the intended logic, 
-  // though usually usedCards are the discard pile. The original logic added them to usedCards 
-  // presumably to avoid duplicates if checking against usedCards for uniqueness? 
-  // Actually, the original logic checked against usedCards to find *available* cards in the deck 
-  // and then added the *newly generated* cards to usedCards. 
-  // Since we are now passing *already generated* cards, we just need to add them to the player.
-  // But we should probably still track them in usedCards if that's how the game tracks "cards in play" to avoid duplicates later?)
-  
-  // Original logic: usedCards.unshift(card);
-  // So yes, we should add them to usedCards.
   usedCards.unshift(...newCards);
 
   const players = state.players.map((player) =>
     player.id === targetId
-      ? { ...player, cards: [...player.cards, ...newCards] }
+      ? { ...player, cards: [...newCards, ...player.cards] }
       : player
   );
 
@@ -43,7 +34,7 @@ const playMultiplayerCard = (
   state: MultiplayerState,
   playerId: string,
   card: Card,
-  consequenceCards: Card[] = [] // Cards to be drawn by the victim (Pick 2, Pick 3, General Market)
+  consequenceCards: Card[] = []
 ): MultiplayerState => {
   const player = state.players.find((p) => p.id === playerId);
   if (!player) return state;
@@ -57,7 +48,6 @@ const playMultiplayerCard = (
   let infoText = "";
   let currentTurnId = nextPlayerId;
 
-  // Remove card from player's hand
   const playersWithoutCard = state.players.map((p) =>
     p.id === playerId
       ? {
@@ -119,8 +109,6 @@ const playMultiplayerCard = (
     infoShown: true,
   };
 };
-
-
 
 const performDrawAction = (
   state: MultiplayerState,

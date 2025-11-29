@@ -6,10 +6,13 @@ import { Server, Socket } from "socket.io";
 import createMultiplayerState from "./utils/functions/createMultiplayerState";
 import {
   Room,
-  PlayerSeat,
-  MultiplayerState,
   ChatMessage,
+  GameAction,
 } from "./types";
+import { roomManager } from "./state/RoomManager";
+import { attachPlayerToState, updateInfoText } from "./utils/gameHelpers";
+import { performDrawAction, playMultiplayerCard } from "./utils/functions/playMultiplayerCard";
+
 
 // Load env from common locations to support both ts-node and compiled runs
 const envPaths = [path.resolve(__dirname, ".env.local")];
@@ -27,8 +30,6 @@ const allowedOrigins = [
 
 console.log("Allowed origins:", allowedOrigins);
 
-let rooms: Room[] = [];
-
 const PORT = process.env.PORT || 8080;
 
 const io = new Server(Number(PORT), {
@@ -44,77 +45,34 @@ const syncStateToRoom = (room: Room) => {
   });
 };
 
-const findRoomBySocket = (socket: Socket): Room | undefined => {
-  return rooms.find(
-    (room) =>
-      room.state.players.some((player) => player.socketId === socket.id) ||
-      room.spectators.some((player) => player.socketId === socket.id)
-  );
-};
-
-const setOnlineStatus = (
-  state: MultiplayerState,
-  storedId: string,
-  socketId: string,
-  online: boolean
-) => {
-  state.players = state.players.map((player) =>
-    player.id === storedId ? { ...player, online, socketId } : player
-  );
-};
-
-const attachPlayerToState = (
-  state: MultiplayerState,
-  storedId: string,
-  socketId: string,
-  name?: string
-): { seat: PlayerSeat | null; isSpectator: boolean } => {
-  const existingSeat = state.players.find((player) => player.id === storedId);
-  if (existingSeat) {
-    existingSeat.socketId = socketId;
-    existingSeat.online = true;
-    if (name) existingSeat.name = name;
-    return { seat: existingSeat, isSpectator: false };
-  }
-
-  const openSeat = state.players.find((player) => !player.id);
-  if (openSeat) {
-    openSeat.id = storedId;
-    openSeat.socketId = socketId;
-    openSeat.online = true;
-    if (name) openSeat.name = name;
-    return { seat: openSeat, isSpectator: false };
-  }
-
-  return { seat: null, isSpectator: true };
-};
-
-const updateInfoText = (state: MultiplayerState) => {
-  const filledSeats = state.players.filter((player) => !!player.id);
-  const allOnline = filledSeats.every((player) => player.online);
-  const allSeatsFilled = filledSeats.length === state.maxPlayers;
-
-  if (!allSeatsFilled) {
-    state.infoText = `Waiting for ${
-      state.maxPlayers - filledSeats.length
-    } more player(s) to join...`;
-    return;
-  }
-
-  if (!allOnline) {
-    const offline = filledSeats.filter((player) => !player.online).length;
-    state.infoText = `${offline} player(s) offline. Game paused.`;
-    return;
-  }
-
-  const currentPlayer =
-    state.players.find((player) => player.id === state.currentTurnId) ||
-    filledSeats[0];
-  state.currentTurnId = currentPlayer.id;
-  state.infoText = `${currentPlayer.name}'s turn`;
-};
-
 io.on("connection", (socket: Socket) => {
+  socket.on("game_action", (action: GameAction, room_id: string) => {
+    const currentRoom = roomManager.getRoom(room_id);
+    if (!currentRoom) return;
+
+    // Broadcast action to other clients
+    socket.broadcast.to(room_id).emit("dispatch", {
+      type: "GAME_ACTION",
+      payload: action,
+    });
+
+    // Update server state
+    if (action.type === "PLAY_CARD") {
+      currentRoom.state = playMultiplayerCard(
+        currentRoom.state,
+        action.playerId,
+        action.card,
+        action.consequenceCards
+      );
+    } else if (action.type === "DRAW_CARD") {
+      currentRoom.state = performDrawAction(
+        currentRoom.state,
+        action.playerId,
+        action.cardsDrawn
+      );
+    }
+  });
+
   socket.on(
     "join_room",
     (payload: {
@@ -134,7 +92,7 @@ io.on("connection", (socket: Socket) => {
       }
 
       socket.join(room_id);
-      let currentRoom = rooms.find((room) => room.room_id === room_id);
+      let currentRoom = roomManager.getRoom(room_id);
 
       if (!currentRoom) {
         const state = createMultiplayerState(playerCount);
@@ -149,6 +107,7 @@ io.on("connection", (socket: Socket) => {
         };
 
         state.currentTurnId = storedId;
+        state.stateHasBeenInitialized = true;
         updateInfoText(state);
 
         currentRoom = {
@@ -158,7 +117,7 @@ io.on("connection", (socket: Socket) => {
           spectators: [],
         };
 
-        rooms.push(currentRoom);
+        roomManager.addRoom(currentRoom);
 
         io.to(socket.id).emit("dispatch", {
           type: "INITIALIZE_DECK",
@@ -182,15 +141,32 @@ io.on("connection", (socket: Socket) => {
       updateInfoText(state);
 
       if (isSpectator) {
-        currentRoom.spectators.push({
-          id: storedId,
-          name: name || "Spectator",
-          seatIndex: 0,
-          cards: [],
-          online: true,
-          socketId: socket.id,
-          isSpectator: true,
-        });
+        if (!currentRoom.state.spectators) {
+          currentRoom.state.spectators = [];
+        }
+
+        const existingSpectatorIndex = currentRoom.state.spectators.findIndex(
+          (s) => s.id === storedId
+        );
+
+        if (existingSpectatorIndex !== -1) {
+          currentRoom.state.spectators[existingSpectatorIndex] = {
+            ...currentRoom.state.spectators[existingSpectatorIndex],
+            socketId: socket.id,
+            online: true,
+            name: name || currentRoom.state.spectators[existingSpectatorIndex].name,
+          };
+        } else {
+          currentRoom.state.spectators.push({
+            id: storedId,
+            name: name || "Spectator",
+            seatIndex: 0,
+            cards: [],
+            online: true,
+            socketId: socket.id,
+            isSpectator: true,
+          });
+        }
       }
 
       io.to(socket.id).emit("dispatch", {
@@ -198,57 +174,63 @@ io.on("connection", (socket: Socket) => {
         payload: { ...state, viewerId: storedId, isSpectator },
       });
 
+      io.to(socket.id).emit("chat_history", currentRoom.chatHistory);
+
       syncStateToRoom(currentRoom);
     }
   );
 
-  socket.on(
-    "sendUpdatedState",
-    (updatedState: MultiplayerState & { viewerId?: string; isSpectator?: boolean }, room_id: string) => {
-      rooms = rooms.map((room) => {
-        if (room.room_id === room_id) {
-          return { ...room, state: updatedState };
-        }
-        return room;
-      });
-
-      io.to(room_id).emit("dispatch", {
-        type: "UPDATE_STATE",
-        payload: updatedState,
-      });
-    }
-  );
+  // socket.on(
+  //   "sendUpdatedState",
+  //   (updatedState: MultiplayerState & { viewerId?: string; isSpectator?: boolean }, room_id: string) => {
+  //     rooms = rooms.map((room) => {
+  //       if (room.room_id === room_id) {
+  //         return { ...room, state: updatedState };
+  //       }
+  //       return room;
+  //     });
+  //
+  //     io.to(room_id).emit("dispatch", {
+  //       type: "UPDATE_STATE",
+  //       payload: updatedState,
+  //     });
+  //   }
+  // );
 
   socket.on("game_over", (room_id: string) => {
-    rooms = rooms.filter((room) => room.room_id !== room_id);
+    roomManager.removeRoom(room_id);
   });
 
   socket.on(
     "update_player_name",
     ({ room_id, storedId, name }: { room_id: string; storedId: string; name: string }) => {
-      const currentRoom = rooms.find((room) => room.room_id === room_id);
+      const currentRoom = roomManager.getRoom(room_id);
       if (!currentRoom) return;
 
       currentRoom.state.players = currentRoom.state.players.map((player) =>
         player.id === storedId ? { ...player, name } : player
       );
 
+      if (currentRoom.state.spectators) {
+        currentRoom.state.spectators = currentRoom.state.spectators.map((spectator) =>
+          spectator.id === storedId ? { ...spectator, name } : spectator
+        );
+      }
+
       syncStateToRoom(currentRoom);
     }
   );
 
   socket.on("send_message", (message: ChatMessage, room_id: string) => {
-    rooms = rooms.map((room) => {
-      if (room.room_id === room_id) {
-        return { ...room, chatHistory: [...room.chatHistory, message] };
-      }
-      return room;
-    });
+    roomManager.updateRoomState(room_id, (room) => ({
+      ...room,
+      chatHistory: [...room.chatHistory, message],
+    }));
     socket.broadcast.to(room_id).emit("receive_message", message);
   });
 
   socket.on("disconnect", () => {
-    const currentRoom = findRoomBySocket(socket);
+    const currentRoom = roomManager.findRoomBySocket(socket);
     if (!currentRoom) return;
 
     const seat = currentRoom.state.players.find(
@@ -262,11 +244,13 @@ io.on("connection", (socket: Socket) => {
       return;
     }
 
-    const spectator = currentRoom.spectators.find(
+    const spectatorIndex = currentRoom.state.spectators?.findIndex(
       (player) => player.socketId === socket.id
     );
-    if (spectator) {
-      spectator.online = false;
+
+    if (spectatorIndex !== undefined && spectatorIndex !== -1 && currentRoom.state.spectators) {
+      currentRoom.state.spectators.splice(spectatorIndex, 1);
+      syncStateToRoom(currentRoom);
     }
   });
 });

@@ -71,6 +71,14 @@
   z-index: 100;
 }
 
+.senderName {
+  font-size: 9px;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 2px;
+  text-align: right;
+}
+
 .inputWrapper {
   display: flex;
   gap: 8px;

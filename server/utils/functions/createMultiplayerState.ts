@@ -78,8 +78,9 @@ const createMultiplayerState = (playerCount?: number): MultiplayerState => {
     currentTurnId: "",
     infoText: "Waiting for all players to join...",
     infoShown: true,
-    stateHasBeenInitialized: true,
-    maxPlayers,
+    stateHasBeenInitialized: false,
+    maxPlayers: maxPlayers || 2,
+    spectators: [],
   };
 };
 
