@@ -1,58 +1,95 @@
 import { applyMiddleware, createStore } from "redux";
 import type { AnyAction, Middleware, Reducer } from "redux";
-import combinedReducer from "./reducers/playFriendCombinedReducer";
+import type { GameState, MultiplayerState } from "../types/game";
+import { DEFAULT_CARD } from "../types/game";
 import socket from "../socket/socket";
 
 const pathname = window.location.pathname;
 const roomId = pathname.slice(pathname.length - 4);
 
-type FriendState = ReturnType<typeof combinedReducer>;
+type FriendState = GameState &
+  Partial<MultiplayerState> & {
+    viewerId?: string;
+    isSpectator?: boolean;
+  };
 
-const initialState: FriendState = combinedReducer(
-  undefined as unknown as FriendState,
-  { type: "@@INIT" } as AnyAction
-);
-
-const enhancedReducer: Reducer<FriendState, AnyAction> = (
-  state = initialState,
-  action
-) => {
-  if (action.type === "INITIALIZE_DECK") {
-    return action.payload as FriendState;
-  }
-
-  if (action.type === "UPDATE_STATE") {
-    const { playerOneState, playerTwoState } = action.payload as {
-      playerOneState: FriendState;
-      playerTwoState: FriendState;
-    };
-    const newState = state.player === "one" ? playerOneState : playerTwoState;
-    return { ...newState, infoShown: state.infoShown };
-  }
-
-  return combinedReducer(state, action);
+const initialState: FriendState = {
+  deck: [],
+  usedCards: [],
+  activeCard: DEFAULT_CARD,
+  userCards: [],
+  opponentCards: [],
+  whoIsToPlay: "user",
+  players: [],
+  currentTurnId: "",
+  infoText: "Connecting...",
+  infoShown: true,
+  stateHasBeenInitialized: false,
+  maxPlayers: 2,
+  viewerId: "",
+  isSpectator: false,
+  isChatOpen: false,
+  unreadCount: 0,
 };
 
-const getUpdatedState: Middleware<{}, FriendState> = ({ getState }) => {
-  return (next) => (action: AnyAction) => {
+const reducer: Reducer<FriendState, AnyAction> = (state = initialState, action) => {
+  switch (action.type) {
+    case "INITIALIZE_DECK":
+      return {
+        ...state,
+        ...(action.payload as Partial<FriendState>),
+        stateHasBeenInitialized: true,
+      };
+    case "UPDATE_STATE":
+      return {
+        ...state,
+        ...(action.payload as Partial<FriendState>),
+        viewerId: state.viewerId,
+        isSpectator: state.isSpectator,
+      };
+    case "SET_LOCAL_STATE":
+      return { ...state, ...(action.payload as Partial<FriendState>) };
+    case "SET_INFO_TEXT":
+      return { ...state, infoText: action.payload as string };
+    case "TOGGLE_INFO_SHOWN":
+      return { ...state, infoShown: !state.infoShown };
+    case "TOGGLE_CHAT":
+      return {
+        ...state,
+        isChatOpen: !state.isChatOpen,
+        unreadCount: state.isChatOpen ? state.unreadCount : 0,
+      };
+    case "SET_UNREAD_COUNT":
+      return { ...state, unreadCount: action.payload as number };
+    default:
+      return state;
+  }
+};
+
+const syncMiddleware: Middleware<{}, FriendState> =
+  ({ getState }) =>
+  (next) =>
+  (action: AnyAction) => {
     const returnValue = next(action);
 
-    const updatedState = getState();
     if (
-      action.type !== "UPDATE_STATE" &&
-      action.type !== "TOGGLE_INFO_SHOWN" &&
-      action.type !== "INITIALIZE_DECK"
+      action.isFromServer ||
+      action.type === "INITIALIZE_DECK" ||
+      action.type === "UPDATE_STATE" ||
+      action.type === "TOGGLE_INFO_SHOWN" ||
+      action.type === "TOGGLE_CHAT" ||
+      action.type === "SET_UNREAD_COUNT"
     ) {
-      const pathname = window.location.pathname;
-      const currentRoomId = pathname.slice(pathname.length - 4);
-      socket.emit("sendUpdatedState", updatedState, currentRoomId);
+      return returnValue;
     }
+
+    const updatedState = getState();
+    socket.emit("sendUpdatedState", updatedState, roomId);
 
     return returnValue;
   };
-};
 
-const store = createStore(enhancedReducer, applyMiddleware(getUpdatedState));
+const store = createStore(reducer, applyMiddleware(syncMiddleware));
 
 export type PlayFriendState = FriendState;
 export type PlayFriendDispatch = typeof store.dispatch;

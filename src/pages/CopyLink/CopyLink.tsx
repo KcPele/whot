@@ -11,10 +11,22 @@ function CopyLink() {
   const [randomCode, setRandomCode] = useState("");
   const [copied, setCopied] = useState(false);
   const [link, setLink] = useState("");
+  const [playerCount, setPlayerCount] = useState(2);
 
   useEffect(() => {
     setRandomCode(generateRandomCode(4));
   }, []);
+
+  useEffect(() => {
+    const storedCount = Number(
+      localStorage.getItem("whot:friend:playerCount") || "2"
+    );
+    setPlayerCount(storedCount);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("whot:friend:playerCount", String(playerCount));
+  }, [playerCount]);
 
   useEffect(() => {
     const baseUrl = process.env.REACT_APP_FRONTEND_URL || "http://localhost:3000";
@@ -31,6 +43,18 @@ function CopyLink() {
           <p className="talk">
             Copy the link below and send it to your friend, then start the game
           </p>
+          <div className="select-group">
+            <label htmlFor="playerCount">Players</label>
+            <select
+              id="playerCount"
+              value={playerCount}
+              onChange={(e) => setPlayerCount(Number(e.target.value))}
+            >
+              <option value={2}>2 players</option>
+              <option value={3}>3 players</option>
+              <option value={4}>4 players</option>
+            </select>
+          </div>
           <div className="input-group">
             <input type="text" value={link} readOnly />
             <button

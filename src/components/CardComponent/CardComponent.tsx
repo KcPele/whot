@@ -22,6 +22,8 @@ type CardComponentProps = {
   isActiveCard?: boolean;
   isPlayed?: boolean;
   isMarketCard?: boolean;
+  onPlay?: () => void;
+  disableInteraction?: boolean;
 };
 
 function CardComponent({
@@ -32,6 +34,8 @@ function CardComponent({
   isActiveCard,
   isPlayed,
   isMarketCard,
+  onPlay,
+  disableInteraction,
 }: CardComponentProps) {
   const [isShownState, setIsShownState] = useState(isShown);
   const [whoIsToPlay, activeCard, userCards, usedCards, opponentCards] =
@@ -90,7 +94,17 @@ function CardComponent({
     delay,
   ]);
 
+  useEffect(() => {
+    setIsShownState(isShown);
+  }, [isShown]);
+
   const handleClick = () => {
+    if (disableInteraction) return;
+    if (onPlay) {
+      onPlay();
+      return;
+    }
+
     if (isMarketCard && whoIsToPlay === "user") {
       goToMarket("user", marketConfig, 1);
       dispatch(setWhoIsToPlay("opponent"));
@@ -111,9 +125,9 @@ function CardComponent({
   return (
     <Flipped flipId={shape + number}>
       <div
-        className={`${style.card} ${isShownState && style.shown} ${
-          isMine && style.mine
-        } ${isActiveCard && "active-card"}`}
+        className={`${style.card} ${isShownState ? style.shown : ""} ${
+          isMine ? style.mine : ""
+        } ${isActiveCard ? "active-card" : ""}`}
         onClick={handleClick}
       >
         <div className={style.inner}>

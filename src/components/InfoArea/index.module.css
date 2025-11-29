@@ -2,27 +2,29 @@
   position: fixed;
   left: 120px;
   top: 100px;
+  z-index: 9999;
 }
 
 @media screen and (max-width: 1180px) {
   .info_area {
-    top: 220px;
+    top: 150px;
   }
 }
 
 @media screen and (max-width: 900px) {
   .info_area {
-    top: unset;
+    top: 70%;
     left: unset;
-    bottom: 30px;
-    right: -55px;
+    bottom: unset;
+    right: -40px;
+    transform: translateY(-50%);
   }
 }
 
 @media screen and (max-width: 650px) {
   .info_area {
-    bottom: 15px;
-    right: -60px;
+    top: 75%;
+    right: -40px;
   }
 }
 /*# sourceMappingURL=index.module.css.map */
