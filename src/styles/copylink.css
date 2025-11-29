@@ -53,6 +53,25 @@
   font-weight: 700;
 }
 
+.copylink main .select-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 15px 0;
+}
+
+.copylink main .select-group label {
+  font-weight: 600;
+}
+
+.copylink main .select-group select {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #dcdcdc;
+  background: #f8f8f8;
+  font-weight: 600;
+}
+
 .copylink main .input-group button {
   all: unset;
   cursor: pointer;

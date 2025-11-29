@@ -29,6 +29,11 @@ const ChatMessageList: React.FC<ChatMessageListProps> = ({ messages, currentUser
             }`}
           >
             {msg.text}
+            {msg.senderName && (
+              <div className={style.senderName}>
+                {msg.senderName}
+              </div>
+            )}
           </div>
         ))}
         <div ref={messagesEndRef} />

@@ -4,11 +4,16 @@ import style from "./index.module.css";
 import Market from "../Market/Market";
 import { useAppSelector } from "../../redux/hooks";
 
-function CenterArea() {
+type CenterAreaProps = {
+  onDraw?: () => void;
+  marketDisabled?: boolean;
+};
+
+function CenterArea({ onDraw, marketDisabled }: CenterAreaProps) {
   const [activeCard] = useAppSelector((state) => [state.activeCard]);
   return (
     <div className={style.center_area}>
-      <Market />
+      <Market onDraw={onDraw} disabled={marketDisabled} />
       <CardComponent
         shape={activeCard.shape}
         number={activeCard.number}

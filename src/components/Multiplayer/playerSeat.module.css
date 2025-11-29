@@ -1,0 +1,276 @@
+.seat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+}
+
+.cards {
+  display: grid;
+  gap: 20px;
+  padding-bottom: 15px;
+  max-width: 100%;
+  overflow: auto;
+  width: 100%;
+}
+
+.cards.horizontal {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media screen and (min-width: 700px) {
+  .cards::-webkit-scrollbar {
+    height: 4px;
+    width: 4px;
+    border-radius: 15px;
+  }
+
+  .cards::-webkit-scrollbar-track {
+    background-color: transparent;
+  }
+
+  .cards::-webkit-scrollbar-thumb {
+    background-color: #c1c1c1;
+    border-radius: 15px;
+  }
+}
+
+.horizontalWrapper {
+  max-width: 650px;
+  margin: 0 auto;
+  width: 100%;
+  overflow: hidden;
+}
+
+.verticalWrapper {
+  max-height: 500px;
+  overflow: hidden;
+  width: 120px;
+}
+
+.horizontal {
+  grid-auto-flow: column;
+}
+
+.vertical {
+  grid-auto-flow: row;
+}
+
+@media screen and (max-width: 650px) {
+  .horizontalWrapper {
+    padding-bottom: 7px;
+    max-width: 100%;
+  }
+
+  .verticalWrapper {
+    width: 100px;
+  }
+
+  .seat.left .horizontalWrapper {
+    margin: 0;
+    margin-right: auto;
+  }
+
+  .seat.right .horizontalWrapper {
+    margin: 0;
+    margin-left: auto;
+  }
+
+  .seat {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    gap: 4px;
+  }
+
+  .seat.left {
+    align-items: flex-start;
+    position: relative;
+  }
+
+  .seat.left .nameTag {
+    position: absolute;
+    top: 16px;
+    left: 0;
+    z-index: 10;
+    background: rgba(0, 0, 0, 0.65);
+  }
+
+  .seat.left .cards {
+    position: relative;
+  }
+
+  .seat.right {
+    align-items: flex-start;
+    position: relative;
+  }
+
+  .seat.right .nameTag {
+    position: absolute;
+    top: 16px;
+    right: 0;
+    z-index: 10;
+    background: rgba(0, 0, 0, 0.65);
+  }
+
+  .seat.right .cards {
+    position: relative;
+  }
+
+  .cards.horizontal {
+    min-width: 0;
+  }
+
+  .nameTag {
+    flex-wrap: wrap;
+    max-width: 100%;
+    justify-content: center;
+    margin-bottom: -4px;
+    font-size: 11px;
+  }
+
+  .seat.left .rotatedName,
+  .seat.right .rotatedName {
+    writing-mode: initial !important;
+    transform: none !important;
+    margin: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+}
+
+.top {
+  justify-content: flex-start;
+}
+
+.bottom {
+  justify-content: flex-end;
+}
+
+.left {
+  align-items: flex-start;
+}
+
+.right {
+  align-items: flex-end;
+}
+
+.nameTag {
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 6px 12px;
+  color: #fff;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.status {
+  padding: 2px 6px;
+  border-radius: 9999px;
+  font-size: 12px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.online {
+  color: #b2f466;
+}
+
+.offline {
+  color: #ffb7b7;
+}
+
+.turn {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 6px;
+  border-radius: 9999px;
+  font-size: 12px;
+}
+
+.cardCount {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 6px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.nameInput {
+  display: flex;
+  gap: 6px;
+}
+
+.nameInput input {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.4);
+  color: #fff;
+}
+
+.nameInput button {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  cursor: pointer;
+}
+
+.rotatedCard {
+  transform: rotate(90deg);
+  margin: 15px 0; /* Add margin to account for rotation */
+}
+
+.placeholder.rotatedCard {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: none;
+  margin: 0;
+}
+
+.rotatedName {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  margin-bottom: 0;
+  margin-left: 10px; /* Adjust spacing */
+}
+
+.seat.left .rotatedName {
+  margin-left: 10px;
+  margin-right: 0;
+}
+
+.seat.right .rotatedName {
+  margin-right: 10px;
+  margin-left: 0;
+}
+
+.seat.left,
+.seat.right {
+  flex-direction: row;
+  align-items: center;
+}
+
+.seat.left {
+  justify-content: flex-start;
+  flex-direction: row-reverse; /* Name closer to center */
+}
+
+.seat.right {
+  justify-content: flex-end;
+  flex-direction: row; /* Name closer to center */
+}
+
+.placeholder {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+}
