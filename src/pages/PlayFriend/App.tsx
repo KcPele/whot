@@ -31,13 +31,9 @@ function App() {
     opponentIsOnline: false,
   });
 
-  const [activeCard, userCards, opponentCards, stateHasBeenInitialized] =
-    useAppSelector((state) => [
-      state.activeCard,
-      state.userCards,
-      state.opponentCards,
-      state.stateHasBeenInitialized,
-    ]);
+  const [userCards, opponentCards, stateHasBeenInitialized] = useAppSelector(
+    (state) => [state.userCards, state.opponentCards, state.stateHasBeenInitialized]
+  );
 
   const dispatch = useAppDispatch();
 
@@ -89,13 +85,14 @@ function App() {
       socket.off("opponentOnlineStateChanged", handleOpponentOnlineState);
       socket.off("confirmOnlineState", handleConfirmOnlineState);
     };
-  }, []);
+  }, [dispatch, roomId]);
 
   useEffect(() => {
-    if (isGameOver().answer && stateHasBeenInitialized) {
+    const { answer } = isGameOver();
+    if (answer && stateHasBeenInitialized) {
       socket.emit("game_over", roomId);
     }
-  }, [isGameOver]);
+  }, [isGameOver, roomId, stateHasBeenInitialized]);
 
   if (errorText) return <ErrorPage errorText={errorText} />;
 

@@ -9,23 +9,23 @@ function GameOver() {
   const isGameOver = useIsGameOver();
   const [animationHasRun, setAnimationHasRun] = useState(false);
 
-  const title = isGameOver().winner === "user" ? "YOU WIN" : "YOU LOST😔";
+  const { answer, winner } = isGameOver();
+
+  const title = winner === "user" ? "YOU WIN" : "YOU LOST😔";
   const subtitle =
-    isGameOver().winner === "user"
+    winner === "user"
       ? "Congrats! You won this round."
       : "Sorry, just try again.";
 
   useEffect(() => {
-    if (isGameOver().winner === "user" && !animationHasRun) {
+    if (winner === "user" && answer && !animationHasRun) {
       confettiAnimation(confetti);
       setAnimationHasRun(true);
     }
-  }, [isGameOver]);
+  }, [answer, winner, animationHasRun]);
 
   return (
-    <div
-      className={`${style.game_over} ${!isGameOver().answer && style.hidden}`}
-    >
+    <div className={`${style.game_over} ${!answer && style.hidden}`}>
       <div className={style.inner}>
         <p className={style.title}>{title}</p>
         <p>{subtitle}</p>

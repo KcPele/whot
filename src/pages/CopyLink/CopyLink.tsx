@@ -14,7 +14,8 @@ function CopyLink() {
   }, []);
 
   useEffect(() => {
-    setLink(`https://whot.trust-akpeti.com/play-friend/${randomCode}`);
+    const baseUrl = process.env.REACT_APP_FRONTEND_URL || "http://localhost:3000";
+    setLink(`${baseUrl}/play-friend/${randomCode}`);
   }, [randomCode]);
 
   return (
@@ -35,11 +36,13 @@ function CopyLink() {
               onClick={() => {
                 navigator.clipboard.writeText(link).then(() => {
                   setCopied(true);
-                  navigator.share({
-                    url: link,
-                    title: "Naija WHOT",
-                    text: "Play a game of WHOT with me!",
-                  });
+                  if (navigator.share) {
+                    navigator.share({
+                      url: link,
+                      title: "Naija WHOT",
+                      text: "Play a game of WHOT with me!",
+                    });
+                  }
                 });
               }}
             >

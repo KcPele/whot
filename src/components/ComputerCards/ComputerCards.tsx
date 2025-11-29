@@ -1,7 +1,7 @@
 import React from "react";
 import CardComponent from "../CardComponent/CardComponent";
 import useMarket from "../../utils/hooks/useMarket";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import goToMarket from "../../utils/functions/goToMarket";
 import useIsGameOver from "../../utils/hooks/useIsGameOver";
 import { setInfoText, setWhoIsToPlay } from "../../redux/actions";
@@ -21,14 +21,17 @@ function ComputerCards() {
   const dispatch = useAppDispatch();
   const { market } = useMarket();
 
-  const marketConfig = {
-    market,
-    dispatch,
-    usedCards,
-    userCards,
-    opponentCards,
-    activeCard,
-  };
+  const marketConfig = useMemo(
+    () => ({
+      market,
+      dispatch,
+      usedCards,
+      userCards,
+      opponentCards,
+      activeCard,
+    }),
+    [market, dispatch, usedCards, userCards, opponentCards, activeCard]
+  );
 
   const isGameOver = useIsGameOver();
 
@@ -65,14 +68,24 @@ function ComputerCards() {
     if (isPlayedSet === false && whoIsToPlay === "opponent") {
       if (isGameOver().answer) return;
 
-      let delay = 500;
-      setTimeout(() => {
+      const delay = 500;
+      const timeout = setTimeout(() => {
         goToMarket("opponent", marketConfig);
         dispatch(setWhoIsToPlay("user"));
         dispatch(setInfoText(infoTextValues.usersTurn));
       }, delay);
+
+      return () => clearTimeout(timeout);
     }
-  }, [whoIsToPlay, userCards, opponentCards]);
+  }, [
+    dispatch,
+    isGameOver,
+    isPlayedSet,
+    marketConfig,
+    opponentCards,
+    userCards,
+    whoIsToPlay,
+  ]);
 
   return (
     <div className="scroll-container">

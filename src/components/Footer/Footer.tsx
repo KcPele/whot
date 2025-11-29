@@ -5,7 +5,7 @@ function Footer() {
   return (
     <footer className={style.footer}>
       Built by{" "}
-      <a href="https://trust-akpeti.com" target={"_blank"}>
+      <a href="https://trust-akpeti.com" target="_blank" rel="noreferrer">
         Akpeti Trust
       </a>
     </footer>

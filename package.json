@@ -2,7 +2,7 @@
   "name": "Whot",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://whot.trust-akpeti.com",
+  "homepage": "http://localhost:3000",
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.1.1",

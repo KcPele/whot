@@ -73,13 +73,22 @@ function CardComponent({
 
   useEffect(() => {
     if (!isPlayed) return;
-
     if (isGameOver().answer) return;
 
-    setTimeout(() => {
+    const timeout = setTimeout(() => {
       playOpponentCard();
     }, delay);
-  }, [activeCard, userCards, opponentCards]);
+
+    return () => clearTimeout(timeout);
+  }, [
+    activeCard,
+    userCards,
+    opponentCards,
+    isPlayed,
+    playOpponentCard,
+    isGameOver,
+    delay,
+  ]);
 
   const handleClick = () => {
     if (isMarketCard && whoIsToPlay === "user") {
