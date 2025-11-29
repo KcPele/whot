@@ -13,6 +13,9 @@
 .board-bottom {
   display: flex;
   justify-content: center;
+  width: 100%;
+  overflow: hidden;
+  min-width: 0;
 }
 
 .board-middle {
@@ -31,4 +34,27 @@
 .board-middle > .seat-right {
   position: absolute;
   right: 0;
+}
+
+@media screen and (max-width: 650px) {
+  .board-middle > .seat-left {
+    left: 20px;
+    max-width: calc(50% - 30px);
+  }
+
+  .board-middle > .seat-right {
+    right: 20px;
+    max-width: calc(50% - 30px);
+  }
+
+  .board-grid {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  .board-top,
+  .board-bottom {
+    max-width: 100%;
+  }
 }

@@ -12,6 +12,13 @@
   padding-bottom: 15px;
   max-width: 100%;
   overflow: auto;
+  width: 100%;
+}
+
+.cards.horizontal {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 .cards > * {
@@ -38,6 +45,8 @@
 .horizontalWrapper {
   max-width: 650px;
   margin: 0 auto;
+  width: 100%;
+  overflow: hidden;
 }
 
 .verticalWrapper {
@@ -56,6 +65,43 @@
 @media screen and (max-width: 650px) {
   .horizontalWrapper {
     padding-bottom: 7px;
+    max-width: 100%;
+  }
+
+  .seat.left .horizontalWrapper {
+    margin: 0;
+    margin-right: auto;
+  }
+
+  .seat.right .horizontalWrapper {
+    margin: 0;
+    margin-left: auto;
+  }
+
+  .seat {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    gap: 4px;
+  }
+
+  .seat.left {
+    align-items: flex-start;
+  }
+
+  .seat.right {
+    align-items: flex-end;
+  }
+
+  .cards.horizontal {
+    min-width: 0;
+  }
+
+  .nameTag {
+    flex-wrap: wrap;
+    max-width: 100%;
+    justify-content: center;
+    margin-bottom: -4px;
   }
 }
 
@@ -65,6 +111,14 @@
 
 .bottom {
   justify-content: flex-end;
+}
+
+.left {
+  align-items: flex-start;
+}
+
+.right {
+  align-items: flex-end;
 }
 
 .nameTag {

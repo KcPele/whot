@@ -255,7 +255,7 @@ function App() {
         />
         <SpectatorList spectators={multiplayerState.spectators || []} />
         {clientState.isSpectator && (
-          <div style={{ position: "fixed", bottom: 80, right: 20, zIndex: 100 }}>
+          <div style={{ position: "fixed", top: 20, right: 70, zIndex: 100 }}>
              <PlayerSeat
               seat={{
                 id: storedId,
@@ -265,7 +265,7 @@ function App() {
                 online: true,
                 isSpectator: true,
               }}
-              position="bottom"
+              position="top"
               isViewer={true}
               isSpectator={true}
               canPlay={false}
