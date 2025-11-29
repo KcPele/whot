@@ -25,6 +25,7 @@ export interface Room {
   room_id: string;
   players: Player[];
   playerOneState: PlayerState;
+  chatHistory: ChatMessage[];
 }
 
 export interface ChatMessage {

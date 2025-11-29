@@ -84,6 +84,10 @@ function App() {
       }
     };
 
+    const handleChatHistory = (history: ChatMessage[]) => {
+      setMessages(history);
+    };
+
     socket.emit("join_room", { room_id: roomId, storedId });
     socket.on("dispatch", handleDispatch);
     socket.on("error", handleError);
@@ -92,6 +96,7 @@ function App() {
     socket.on("opponentOnlineStateChanged", handleOpponentOnlineState);
     socket.on("confirmOnlineState", handleConfirmOnlineState);
     socket.on("receive_message", handleReceiveMessage);
+    socket.on("chat_history", handleChatHistory);
 
     if (socket.connected) {
       handleConnect();
@@ -105,6 +110,7 @@ function App() {
       socket.off("opponentOnlineStateChanged", handleOpponentOnlineState);
       socket.off("confirmOnlineState", handleConfirmOnlineState);
       socket.off("receive_message", handleReceiveMessage);
+      socket.off("chat_history", handleChatHistory);
     };
   }, [dispatch, roomId, isChatOpen]);
 

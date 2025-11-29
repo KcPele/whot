@@ -39,13 +39,15 @@ function CopyLink() {
               onClick={() => {
                 navigator.clipboard.writeText(link).then(() => {
                   setCopied(true);
-                  if (navigator.share) {
-                    navigator.share({
-                      url: link,
-                      title: "Naija WHOT",
-                      text: "Play a game of WHOT with me!",
-                    });
-                  }
+                    if (navigator.share) {
+                      navigator.share({
+                        url: link,
+                        title: "Naija WHOT",
+                        text: "Play a game of WHOT with me!",
+                      }).catch((err) => {
+                        console.log("Share canceled or failed:", err);
+                      });
+                    }
                 });
               }}
             >
