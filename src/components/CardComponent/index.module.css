@@ -1,4 +1,10 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@900&display=swap");
+.cardWrapper {
+  display: block;
+  position: relative;
+  z-index: 5;
+}
+
 .card {
   --width: 100px;
   --height: 138px;
