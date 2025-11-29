@@ -20,6 +20,19 @@ export interface BaseGameState {
   infoShown: boolean;
 }
 
+export interface Player {
+  storedId: string;
+  socketId: string;
+  player: 'one' | 'two';
+}
+
+export interface ChatMessage {
+  id: string;
+  text: string;
+  senderId: string;
+  timestamp: number;
+}
+
 export interface PlayFriendExtras {
   stateHasBeenInitialized: boolean;
   player: PlayerId;

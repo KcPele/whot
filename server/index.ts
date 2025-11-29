@@ -165,7 +165,7 @@ io.on("connection", (socket: Socket) => {
           player: "one",
         };
 
-        rooms.push({
+          rooms.push({
           room_id,
           players: [
             {
@@ -175,6 +175,7 @@ io.on("connection", (socket: Socket) => {
             },
           ],
           playerOneState,
+          chatHistory: [],
         });
 
         io.to(socket.id).emit("dispatch", {
@@ -241,7 +242,23 @@ io.on("connection", (socket: Socket) => {
       if (opponentSocketId) {
         io.to(opponentSocketId).emit("opponentOnlineStateChanged", true);
       }
+      
+      // Send chat history to the reconnecting user
+      io.to(socket.id).emit("chat_history", currentRoom.chatHistory);
     }
+  });
+
+  socket.on("send_message", (message: any, room_id: string) => {
+    rooms = rooms.map(room => {
+      if (room.room_id === room_id) {
+        return {
+          ...room,
+          chatHistory: [...room.chatHistory, message]
+        };
+      }
+      return room;
+    });
+    socket.broadcast.to(room_id).emit("receive_message", message);
   });
 });
 

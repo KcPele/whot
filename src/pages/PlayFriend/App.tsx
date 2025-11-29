@@ -9,6 +9,8 @@ import {
   OnlineIndicators,
   ConnectionLoader,
 } from "../../components";
+import { ChatInput, ChatMessageList, ChatToggle } from "../../components/Chat";
+import { ChatMessage } from "../../types/game";
 import { Flipper } from "react-flip-toolkit";
 import { useEffect, useState } from "react";
 import "../../index.css";
@@ -30,6 +32,9 @@ function App() {
     userIsOnline: false,
     opponentIsOnline: false,
   });
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const [userCards, opponentCards, stateHasBeenInitialized] = useAppSelector(
     (state) => [state.userCards, state.opponentCards, state.stateHasBeenInitialized]
@@ -59,6 +64,9 @@ function App() {
 
     const handleConnect = () => {
       setOnlineState((prevState) => ({ ...prevState, userIsOnline: true }));
+      // Re-join room and confirm online state on reconnection
+      socket.emit("join_room", { room_id: roomId, storedId });
+      socket.emit("confirmOnlineState", storedId, roomId);
     };
 
     const handleOpponentOnlineState = (opponentIsOnline: boolean) => {
@@ -69,6 +77,17 @@ function App() {
       socket.emit("confirmOnlineState", storedId, roomId);
     };
 
+    const handleReceiveMessage = (message: ChatMessage) => {
+      setMessages((prev) => [...prev, message]);
+      if (!isChatOpen) {
+        setUnreadCount((prev) => prev + 1);
+      }
+    };
+
+    const handleChatHistory = (history: ChatMessage[]) => {
+      setMessages(history);
+    };
+
     socket.emit("join_room", { room_id: roomId, storedId });
     socket.on("dispatch", handleDispatch);
     socket.on("error", handleError);
@@ -76,6 +95,12 @@ function App() {
     socket.on("connect", handleConnect);
     socket.on("opponentOnlineStateChanged", handleOpponentOnlineState);
     socket.on("confirmOnlineState", handleConfirmOnlineState);
+    socket.on("receive_message", handleReceiveMessage);
+    socket.on("chat_history", handleChatHistory);
+
+    if (socket.connected) {
+      handleConnect();
+    }
 
     return () => {
       socket.off("dispatch", handleDispatch);
@@ -84,8 +109,10 @@ function App() {
       socket.off("connect", handleConnect);
       socket.off("opponentOnlineStateChanged", handleOpponentOnlineState);
       socket.off("confirmOnlineState", handleConfirmOnlineState);
+      socket.off("receive_message", handleReceiveMessage);
+      socket.off("chat_history", handleChatHistory);
     };
-  }, [dispatch, roomId]);
+  }, [dispatch, roomId, isChatOpen]);
 
   useEffect(() => {
     const { answer } = isGameOver();
@@ -93,6 +120,25 @@ function App() {
       socket.emit("game_over", roomId);
     }
   }, [isGameOver, roomId, stateHasBeenInitialized]);
+
+  const handleSendMessage = (text: string) => {
+    const storedId = localStorage.getItem("storedId") || "";
+    const newMessage: ChatMessage = {
+      id: generateRandomCode(10),
+      text,
+      senderId: storedId,
+      timestamp: Date.now(),
+    };
+    setMessages((prev) => [...prev, newMessage]);
+    socket.emit("send_message", newMessage, roomId);
+  };
+
+  const toggleChat = () => {
+    setIsChatOpen((prev) => !prev);
+    if (!isChatOpen) {
+      setUnreadCount(0);
+    }
+  };
 
   if (errorText) return <ErrorPage errorText={errorText} />;
 
@@ -110,6 +156,13 @@ function App() {
         <GameOver />
         <Preloader />
         <OnlineIndicators onlineState={onlineState} />
+        {isChatOpen && (
+          <>
+            <ChatMessageList messages={messages} currentUserId={localStorage.getItem("storedId") || ""} />
+            <ChatInput onSendMessage={handleSendMessage} />
+          </>
+        )}
+        <ChatToggle onClick={toggleChat} unreadCount={unreadCount} isOpen={isChatOpen} />
       </div>
     </Flipper>
   );
