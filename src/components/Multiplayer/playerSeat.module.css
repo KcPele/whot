@@ -93,10 +93,11 @@
 
   .seat.left .nameTag {
     position: absolute;
-    top: 16px;
+    top: 30px !important;
     left: 0;
     z-index: 10;
     background: rgba(0, 0, 0, 0.65);
+    transform: none !important;
   }
 
   .seat.left .cards {
@@ -110,10 +111,11 @@
 
   .seat.right .nameTag {
     position: absolute;
-    top: 16px;
+    top: 30px !important;
     right: 0;
     z-index: 10;
     background: rgba(0, 0, 0, 0.65);
+    transform: none !important;
   }
 
   .seat.right .cards {
@@ -258,6 +260,7 @@
 .seat.right {
   flex-direction: row;
   align-items: center;
+  position: relative;
 }
 
 .seat.left {
@@ -268,6 +271,30 @@
 .seat.right {
   justify-content: flex-end;
   flex-direction: row; /* Name closer to center */
+}
+
+.seat.left .nameTag,
+.seat.right .nameTag {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.65);
+  writing-mode: initial !important;
+  margin: 0 !important;
+}
+
+.seat.left .nameTag {
+  left: 0;
+}
+
+.seat.right .nameTag {
+  right: 0;
+}
+
+.seat.left .verticalWrapper,
+.seat.right .verticalWrapper {
+  position: relative;
 }
 
 .placeholder {
