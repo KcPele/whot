@@ -25,7 +25,9 @@ console.log("Allowed origins:", allowedOrigins);
 
 let rooms: Room[] = [];
 
-const io = new Server(8080, {
+const PORT = process.env.PORT || 8080;
+
+const io = new Server(Number(PORT), {
   cors: {
     origin: allowedOrigins as [],
   },
@@ -243,4 +245,4 @@ io.on("connection", (socket: Socket) => {
   });
 });
 
-console.log("Server started on port 8080");
+console.log(`Server started on port ${PORT}`);
