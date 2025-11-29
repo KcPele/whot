@@ -1,17 +1,33 @@
+import "dotenv/config";
+import dotenv from "dotenv";
+import fs from "fs";
+import path from "path";
 import { Server, Socket } from "socket.io";
 import initializeDeck from "./utils/functions/initializeDeck";
 import reverseState from "./utils/functions/reverseState";
 import { Room, PlayerState } from "./types";
 
+// Load env from common locations to support both ts-node and compiled runs
+const envPaths = [path.resolve(__dirname, ".env.local")];
+
+envPaths.forEach((envPath) => {
+  if (fs.existsSync(envPath)) {
+    dotenv.config({ path: envPath, override: false });
+  }
+});
+
 const allowedOrigins = [
-  process.env.REACT_APP_FRONTEND_URL || "http://localhost:3000",
+  process.env.APP_FRONTEND_URL || "http://localhost:3000",
+  "http://localhost:3000",
 ];
+
+console.log("Allowed origins:", allowedOrigins);
 
 let rooms: Room[] = [];
 
 const io = new Server(8080, {
   cors: {
-    origin: [...allowedOrigins],
+    origin: allowedOrigins as [],
   },
 });
 
