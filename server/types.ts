@@ -26,3 +26,10 @@ export interface Room {
   players: Player[];
   playerOneState: PlayerState;
 }
+
+export interface ChatMessage {
+  id: string;
+  text: string;
+  senderId: string;
+  timestamp: number;
+}

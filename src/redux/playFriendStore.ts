@@ -43,7 +43,9 @@ const getUpdatedState: Middleware<{}, FriendState> = ({ getState }) => {
       action.type !== "TOGGLE_INFO_SHOWN" &&
       action.type !== "INITIALIZE_DECK"
     ) {
-      socket.emit("sendUpdatedState", updatedState, roomId);
+      const pathname = window.location.pathname;
+      const currentRoomId = pathname.slice(pathname.length - 4);
+      socket.emit("sendUpdatedState", updatedState, currentRoomId);
     }
 
     return returnValue;

@@ -243,6 +243,9 @@ io.on("connection", (socket: Socket) => {
       }
     }
   });
+  socket.on("send_message", (message: any, room_id: string) => {
+    socket.broadcast.to(room_id).emit("receive_message", message);
+  });
 });
 
 console.log(`Server started on port ${PORT}`);
