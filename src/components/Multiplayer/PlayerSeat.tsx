@@ -81,23 +81,29 @@ const PlayerSeat = ({
   return (
     <div className={`${styles.seat} ${styles[position]}`}>
       {renderName()}
-      <div className={`${styles.cards} ${orientation}`}>
-        {(seat?.cards || []).map((card, index) => (
-          <CardComponent
-            key={`${card.shape}-${card.number}-${seat?.id || "placeholder"}-${index}`}
-            shape={card.shape}
-            number={card.number}
-            isMine={isViewer && !isSpectator}
-            isShown={isViewer && !isSpectator}
-            disableInteraction={!isViewer || !canPlay}
-            onPlay={
-              isViewer && onPlayCard
-                ? () => onPlayCard(card)
-                : undefined
-            }
-          />
-        ))}
-        {!seat && <div className={styles.placeholder}>Seat empty</div>}
+      <div
+        className={
+          orientation === styles.horizontal
+            ? styles.horizontalWrapper
+            : styles.verticalWrapper
+        }
+      >
+        <div className={`${styles.cards} ${orientation}`}>
+          {(seat?.cards || []).map((card, index) => (
+            <CardComponent
+              key={`${card.shape}-${card.number}-${seat?.id || "placeholder"}-${index}`}
+              shape={card.shape}
+              number={card.number}
+              isMine={isViewer && !isSpectator}
+              isShown={isViewer && !isSpectator}
+              disableInteraction={!isViewer || !canPlay}
+              onPlay={
+                isViewer && onPlayCard ? () => onPlayCard(card) : undefined
+              }
+            />
+          ))}
+          {!seat && <div className={styles.placeholder}>Seat empty</div>}
+        </div>
       </div>
     </div>
   );
