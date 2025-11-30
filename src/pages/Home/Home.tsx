@@ -49,6 +49,9 @@ function Home() {
           <Link to="/play-computer">PLAY COMPUTER</Link>
           <p>OR</p>
           <PlayWithAI />
+          <Link to="/how-to-play" className="how-to-play-link">
+            HOW TO PLAY
+          </Link>
         </div>
       </main>
     </section>
