@@ -28,7 +28,7 @@ function GameOver() {
     <div className={`${style.game_over} ${!answer && style.hidden}`}>
       <div className={style.inner}>
         <p className={style.title}>{title}</p>
-        <p>{subtitle}</p>
+        <p className="text-black">{subtitle}</p>
         <button
           onClick={() => {
             window.location.reload();
