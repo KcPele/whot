@@ -8,6 +8,7 @@ import activeCardReducer from "./activeCardReducer";
 import whoIsToPlayReducer from "./whoIsToPlayReducer";
 import infoShownReducer from "./infoShownReducer";
 import infoTextReducer from "./infoTextReducer";
+import rulesReducer from "./rulesReducer";
 
 const combinedReducer = combineReducers({
   deck: deckReducer,
@@ -18,6 +19,7 @@ const combinedReducer = combineReducers({
   whoIsToPlay: whoIsToPlayReducer,
   infoText: infoTextReducer,
   infoShown: infoShownReducer,
+  rules: rulesReducer,
 });
 
 export default combinedReducer;

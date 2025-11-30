@@ -62,13 +62,16 @@ io.on("connection", (socket: Socket) => {
         currentRoom.state,
         action.playerId,
         action.card,
-        action.consequenceCards
+        action.consequenceCards,
+        undefined, // Rules are already in state
+        action.reshuffle
       );
     } else if (action.type === "DRAW_CARD") {
       currentRoom.state = performDrawAction(
         currentRoom.state,
         action.playerId,
-        action.cardsDrawn
+        action.cardsDrawn,
+        action.reshuffle
       );
     }
   });
@@ -80,8 +83,9 @@ io.on("connection", (socket: Socket) => {
       storedId: string;
       playerCount?: number;
       name?: string;
+      rules?: any; // Using any to avoid strict type check here, or import GameRules
     }) => {
-      const { room_id, storedId, playerCount, name } = payload;
+      const { room_id, storedId, playerCount, name, rules } = payload;
 
       if (room_id?.length !== 4) {
         io.to(socket.id).emit(
@@ -95,7 +99,7 @@ io.on("connection", (socket: Socket) => {
       let currentRoom = roomManager.getRoom(room_id);
 
       if (!currentRoom) {
-        const state = createMultiplayerState(playerCount);
+        const state = createMultiplayerState(playerCount, rules);
         const seat = state.players[0];
 
         state.players[0] = {

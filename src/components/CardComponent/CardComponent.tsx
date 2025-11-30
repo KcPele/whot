@@ -66,6 +66,7 @@ function CardComponent({
     usedCards,
     userCards,
     opponentCards,
+    activeCard,
   };
 
   let delay = 500;

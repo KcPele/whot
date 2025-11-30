@@ -48,7 +48,10 @@ const dealHand = (deck: Card[], usedCards: Card[], cardsPerPlayer = 4) => {
   return hand;
 };
 
-const createMultiplayerState = (playerCount?: number): MultiplayerState => {
+const createMultiplayerState = (
+  playerCount?: number,
+  rules?: MultiplayerState["rules"]
+): MultiplayerState => {
   const maxPlayers = sanitizePlayerCount(playerCount);
   const deck = buildDeck();
   const usedCardsTracker: Card[] = [];
@@ -81,6 +84,17 @@ const createMultiplayerState = (playerCount?: number): MultiplayerState => {
     stateHasBeenInitialized: false,
     maxPlayers: maxPlayers || 2,
     spectators: [],
+    rules: rules || {
+      holdOn: true,
+      pickTwo: true,
+      pickThree: true,
+      suspension: true,
+      generalMarket: true,
+      defendPickThree: false,
+      doubleSuspension: false,
+      endCondition: "firstToEmpty",
+    },
+    activeSuspensions: 0,
   };
 };
 

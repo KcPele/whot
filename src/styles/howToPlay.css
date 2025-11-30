@@ -1,9 +1,21 @@
 .how-to-play {
   min-height: 100vh;
   padding: 70px 22px 90px;
-  background: radial-gradient(circle at 18% 20%, rgba(255, 222, 200, 0.55), transparent 32%),
-    radial-gradient(circle at 82% 10%, rgba(206, 213, 255, 0.6), transparent 30%),
-    radial-gradient(circle at 50% 100%, rgba(204, 240, 227, 0.6), transparent 32%),
+  background: radial-gradient(
+      circle at 18% 20%,
+      rgba(255, 222, 200, 0.55),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 82% 10%,
+      rgba(206, 213, 255, 0.6),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 50% 100%,
+      rgba(204, 240, 227, 0.6),
+      transparent 32%
+    ),
     #fdfbf8;
   color: #2b1a21;
 }
@@ -81,6 +93,11 @@
   color: #ffffff;
   border: none;
   box-shadow: 0 12px 28px rgba(92, 115, 140, 0.25);
+}
+
+.how-to-play__action--primary:hover {
+  background: linear-gradient(135deg, #8f5f8f, #6c839c);
+  color: #ffffff;
 }
 
 .how-to-play__grid {

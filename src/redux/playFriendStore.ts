@@ -15,6 +15,27 @@ type FriendState = GameState &
     roomId?: string;
   };
 
+const getRules = () => {
+  try {
+    const rules = localStorage.getItem("whot:friend:rules");
+    if (rules) {
+      return JSON.parse(rules);
+    }
+  } catch (e) {
+    console.error("Failed to parse rules", e);
+  }
+  return {
+    holdOn: true,
+    pickTwo: true,
+    pickThree: true,
+    suspension: true,
+    generalMarket: true,
+    defendPickThree: false,
+    doubleSuspension: false,
+    endCondition: "firstToEmpty",
+  };
+};
+
 const initialState: FriendState = {
   deck: [],
   usedCards: [],
@@ -34,6 +55,8 @@ const initialState: FriendState = {
   unreadCount: 0,
   spectators: [],
   roomId: "",
+  rules: getRules(),
+  activeSuspensions: 0,
 };
 
 const reducer: Reducer<FriendState, AnyAction> = (
@@ -92,13 +115,16 @@ const reducer: Reducer<FriendState, AnyAction> = (
           updatedState,
           gameAction.playerId,
           gameAction.card,
-          gameAction.consequenceCards
+          gameAction.consequenceCards,
+          state.rules,
+          gameAction.reshuffle
         );
       } else if (gameAction.type === "DRAW_CARD") {
         updatedState = performDrawAction(
           updatedState,
           gameAction.playerId,
-          gameAction.cardsDrawn
+          gameAction.cardsDrawn,
+          gameAction.reshuffle
         );
       }
 
@@ -113,13 +139,16 @@ const reducer: Reducer<FriendState, AnyAction> = (
           updatedState,
           gameAction.playerId,
           gameAction.card,
-          gameAction.consequenceCards
+          gameAction.consequenceCards,
+          state.rules,
+          gameAction.reshuffle
         );
       } else if (gameAction.type === "DRAW_CARD") {
         updatedState = performDrawAction(
           updatedState,
           gameAction.playerId,
-          gameAction.cardsDrawn
+          gameAction.cardsDrawn,
+          gameAction.reshuffle
         );
       }
 

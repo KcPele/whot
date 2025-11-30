@@ -18,6 +18,8 @@ export interface GameRules {
   suspension: boolean;
   generalMarket: boolean;
   defendPickThree: boolean;
+  doubleSuspension: boolean;
+  endCondition: "firstToEmpty" | "highestNumberOut";
 }
 
 export interface BaseGameState {
@@ -30,6 +32,7 @@ export interface BaseGameState {
   infoText: string;
   infoShown: boolean;
   rules?: GameRules;
+  activeSuspensions?: number;
 }
 
 export interface Player {
@@ -60,6 +63,10 @@ export interface MultiplayerState {
   viewerId: string;
   isSpectator?: boolean;
   spectators: PlayerSeat[];
+  rules?: GameRules;
+  activeSuspensions?: number;
+  pendingPenalty?: number;
+  penaltyAttackerId?: string;
 }
 
 export interface ChatMessage {
@@ -93,10 +100,13 @@ export type GameAction =
       playerId: string;
       card: Card;
       consequenceCards?: Card[];
+      reshuffle?: boolean;
+      generalMarket?: boolean;
     }
   | {
       type: "DRAW_CARD";
       playerId: string;
       cardsDrawn: Card[];
+      reshuffle?: boolean;
     };
 
