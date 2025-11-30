@@ -6,6 +6,25 @@ import type { BaseGameState } from "../types/game";
 const { deck, userCards, usedCards, opponentCards, activeCard } =
   initializeDeck();
 
+const getRules = () => {
+  try {
+    const rules = localStorage.getItem("whot_rules");
+    if (rules) {
+      return JSON.parse(rules);
+    }
+  } catch (e) {
+    console.error("Failed to parse rules", e);
+  }
+  return {
+    holdOn: true,
+    pickTwo: true,
+    pickThree: true,
+    suspension: true,
+    generalMarket: true,
+    defendPickThree: false,
+  };
+};
+
 const preloadedState: BaseGameState = {
   deck,
   userCards,
@@ -15,6 +34,7 @@ const preloadedState: BaseGameState = {
   whoIsToPlay: "user",
   infoText: "It's your turn to make a move now",
   infoShown: true,
+  rules: getRules(),
 };
 
 const store = createStore(

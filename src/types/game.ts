@@ -11,6 +11,15 @@ export interface Card {
   number: number;
 }
 
+export interface GameRules {
+  holdOn: boolean;
+  pickTwo: boolean;
+  pickThree: boolean;
+  suspension: boolean;
+  generalMarket: boolean;
+  defendPickThree: boolean;
+}
+
 export interface BaseGameState {
   deck: Card[];
   userCards: Card[];
@@ -20,6 +29,7 @@ export interface BaseGameState {
   whoIsToPlay: PlayerTurn;
   infoText: string;
   infoShown: boolean;
+  rules?: GameRules;
 }
 
 export interface Player {
