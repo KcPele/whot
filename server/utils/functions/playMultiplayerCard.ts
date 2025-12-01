@@ -1,40 +1,18 @@
-import type { MultiplayerState } from "../../types";
-import Card from "../classes/Card";
-
-const getNextPlayerId = (state: MultiplayerState, currentId: string) => {
-  const ordered = [...state.players]
-    .filter((player) => !!player.id)
-    .sort((a, b) => a.seatIndex - b.seatIndex);
-  if (!ordered.length) return currentId;
-  const currentIndex = ordered.findIndex((player) => player.id === currentId);
-  const nextIndex = (currentIndex + 1) % ordered.length;
-  return ordered[nextIndex]?.id || currentId;
-};
-
-const drawCards = (
-  state: MultiplayerState,
-  targetId: string,
-  cardsToDraw: Card[]
-): { players: MultiplayerState["players"]; usedCards: Card[] } => {
-  const usedCards = [...state.usedCards];
-  const newCards: Card[] = [...cardsToDraw];
-
-  usedCards.unshift(...newCards);
-
-  const players = state.players.map((player) =>
-    player.id === targetId
-      ? { ...player, cards: [...newCards, ...player.cards] }
-      : player
-  );
-
-  return { players, usedCards };
-};
+import { Card, MultiplayerState, GameRules } from "../../types";
+import { getNextPlayerId, drawCards } from "./playMultiplayerUtils";
+import { handleCard1 } from "./cardActions/handleCard1";
+import { handleCard2 } from "./cardActions/handleCard2";
+import { handleCard5 } from "./cardActions/handleCard5";
+import { handleCard8 } from "./cardActions/handleCard8";
+import { handleCard14 } from "./cardActions/handleCard14";
 
 const playMultiplayerCard = (
   state: MultiplayerState,
   playerId: string,
   card: Card,
-  consequenceCards: Card[] = []
+  consequenceCards: Card[] = [],
+  rules?: GameRules,
+  reshuffle?: boolean
 ): MultiplayerState => {
   const player = state.players.find((p) => p.id === playerId);
   if (!player) return state;
@@ -44,10 +22,7 @@ const playMultiplayerCard = (
   );
   if (!cardExists) return state;
 
-  const nextPlayerId = getNextPlayerId(state, playerId);
-  let infoText = "";
-  let currentTurnId = nextPlayerId;
-
+  // Remove card from player's hand
   const playersWithoutCard = state.players.map((p) =>
     p.id === playerId
       ? {
@@ -61,42 +36,76 @@ const playMultiplayerCard = (
 
   let players = playersWithoutCard;
   let usedCards = [card, ...state.usedCards];
+  let activeSuspensions = state.activeSuspensions || 0;
+  let pendingPenalty = state.pendingPenalty;
+  let penaltyAttackerId = state.penaltyAttackerId;
 
-  if (card.number === 1 || card.number === 8) {
-    infoText = `${player.name} suspended the next player`;
-    currentTurnId = playerId;
+  // Handle Reshuffle
+  if (reshuffle) {
+    const cardsInPlay: Card[] = [];
+    players.forEach(p => cardsInPlay.push(...p.cards));
+    cardsInPlay.push(card);
+    cardsInPlay.push(...consequenceCards);
+    usedCards = cardsInPlay;
+  }
+
+  // Default rules if not provided
+  const activeRules: GameRules = state.rules || {
+    holdOn: true,
+    pickTwo: true,
+    pickThree: true,
+    suspension: true,
+    generalMarket: true,
+    defendPickThree: false,
+    doubleSuspension: false,
+    endCondition: "firstToEmpty",
+  };
+
+  let infoText = "";
+  let currentTurnId = "";
+
+  // Delegate to handlers
+  if (card.number === 1) {
+    const result = handleCard1(state, playerId, player, activeRules, activeSuspensions);
+    infoText = result.infoText;
+    currentTurnId = result.currentTurnId;
+    activeSuspensions = result.activeSuspensions;
   } else if (card.number === 2) {
-    const { players: updatedPlayers, usedCards: updatedUsed } = drawCards(
-      { ...state, players: playersWithoutCard, usedCards },
-      nextPlayerId,
-      consequenceCards
-    );
-    players = updatedPlayers;
-    usedCards = updatedUsed;
-    infoText = `${player.name} played 2 — next player picks two`;
-    currentTurnId = playerId;
+    const result = handleCard2(state, playerId, player, playersWithoutCard, usedCards, consequenceCards, activeRules, activeSuspensions);
+    infoText = result.infoText;
+    currentTurnId = result.currentTurnId;
+    activeSuspensions = result.activeSuspensions;
+    players = result.players;
+    usedCards = result.usedCards;
   } else if (card.number === 5) {
-    const { players: updatedPlayers, usedCards: updatedUsed } = drawCards(
-      { ...state, players: playersWithoutCard, usedCards },
-      nextPlayerId,
-      consequenceCards
-    );
-    players = updatedPlayers;
-    usedCards = updatedUsed;
-    infoText = `${player.name} played 5 — next player picks three`;
-    currentTurnId = playerId;
+    const result = handleCard5(state, playerId, player, playersWithoutCard, usedCards, consequenceCards, activeRules, activeSuspensions);
+    infoText = result.infoText;
+    currentTurnId = result.currentTurnId;
+    activeSuspensions = result.activeSuspensions;
+    players = result.players;
+    usedCards = result.usedCards;
+    pendingPenalty = result.pendingPenalty;
+    penaltyAttackerId = result.penaltyAttackerId;
+  } else if (card.number === 8) {
+    const updatedPlayer = playersWithoutCard.find(p => p.id === playerId);
+    if (updatedPlayer) {
+        const result = handleCard8(state, playerId, updatedPlayer, activeRules, activeSuspensions);
+        infoText = result.infoText;
+        currentTurnId = result.currentTurnId;
+        activeSuspensions = result.activeSuspensions;
+    }
   } else if (card.number === 14) {
-    const { players: updatedPlayers, usedCards: updatedUsed } = drawCards(
-      { ...state, players: playersWithoutCard, usedCards },
-      nextPlayerId,
-      consequenceCards
-    );
-    players = updatedPlayers;
-    usedCards = updatedUsed;
-    infoText = `${player.name} played WHOT — general market`;
-    currentTurnId = playerId;
+    const result = handleCard14(state, playerId, player, playersWithoutCard, usedCards, consequenceCards, activeRules, activeSuspensions);
+    infoText = result.infoText;
+    currentTurnId = result.currentTurnId;
+    activeSuspensions = result.activeSuspensions;
+    players = result.players;
+    usedCards = result.usedCards;
   } else {
-    infoText = `${players.find((p) => p.id === currentTurnId)?.name || "Next"}'s turn`;
+    // Normal card
+    infoText = `${player.name} played ${card.number}`;
+    currentTurnId = getNextPlayerId(state, playerId, activeSuspensions);
+    activeSuspensions = 0;
   }
 
   return {
@@ -107,25 +116,69 @@ const playMultiplayerCard = (
     currentTurnId,
     infoText,
     infoShown: true,
+    activeSuspensions,
+    pendingPenalty,
+    penaltyAttackerId,
   };
 };
 
 const performDrawAction = (
   state: MultiplayerState,
   playerId: string,
-  cardsToDraw: Card[]
+  cardsToDraw: Card[],
+  reshuffle?: boolean
 ): MultiplayerState => {
-  const { players, usedCards } = drawCards(state, playerId, cardsToDraw);
-  const nextPlayerId = getNextPlayerId(state, playerId);
-  const nextPlayer = players.find((p) => p.id === nextPlayerId);
+  let usedCards = [...state.usedCards];
+  
+  if (reshuffle) {
+    const cardsInPlay: Card[] = [];
+    state.players.forEach(p => cardsInPlay.push(...p.cards));
+    cardsInPlay.push(state.activeCard);
+    usedCards = cardsInPlay;
+  }
+
+  const { players, usedCards: updatedUsed } = drawCards(
+    { ...state, usedCards }, 
+    playerId, 
+    cardsToDraw
+  );
+  
+  let nextPlayerId = "";
+  let infoText = "";
+  let activeSuspensions = 0;
+
+  if (state.pendingPenalty && state.pendingPenalty > 0) {
+    // Player failed to defend and drew cards.
+    // Turn goes back to the attacker.
+    nextPlayerId = state.penaltyAttackerId || getNextPlayerId(state, playerId, 0);
+    if (!state.players.find(p => p.id === nextPlayerId)) {
+       nextPlayerId = getNextPlayerId(state, playerId, 0);
+    }
+    
+    const attackerName = state.players.find(p => p.id === nextPlayerId)?.name;
+    infoText = `${attackerName || "Attacker"} plays again`;
+    
+    // Reset penalty
+    state.pendingPenalty = 0;
+    state.penaltyAttackerId = undefined;
+  } else {
+    const skip = state.activeSuspensions || 0;
+    nextPlayerId = getNextPlayerId(state, playerId, skip);
+    const nextPlayer = players.find((p) => p.id === nextPlayerId);
+    infoText = `${nextPlayer?.name || "Next"}'s turn`;
+    activeSuspensions = 0;
+  }
 
   return {
     ...state,
     players,
-    usedCards,
+    usedCards: updatedUsed,
     currentTurnId: nextPlayerId,
-    infoText: `${nextPlayer?.name || "Next"}'s turn`,
+    infoText,
     infoShown: true,
+    activeSuspensions,
+    pendingPenalty: 0,
+    penaltyAttackerId: undefined,
   };
 };
 

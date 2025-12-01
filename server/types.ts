@@ -1,4 +1,5 @@
 import Card from "./utils/classes/Card";
+export { Card };
 
 export type Shape = 'circle' | 'triangle' | 'cross' | 'square' | 'star';
 
@@ -33,6 +34,17 @@ export interface PlayerSeat {
   isSpectator?: boolean;
 }
 
+export interface GameRules {
+  holdOn: boolean;
+  pickTwo: boolean;
+  pickThree: boolean;
+  suspension: boolean;
+  generalMarket: boolean;
+  defendPickThree: boolean;
+  doubleSuspension: boolean;
+  endCondition: "firstToEmpty" | "highestNumberOut";
+}
+
 export interface MultiplayerState {
   deck: Card[];
   usedCards: Card[];
@@ -44,6 +56,10 @@ export interface MultiplayerState {
   stateHasBeenInitialized: boolean;
   maxPlayers: number;
   spectators: PlayerSeat[];
+  rules?: GameRules;
+  activeSuspensions?: number;
+  pendingPenalty?: number;
+  penaltyAttackerId?: string;
 }
 
 export interface Room {
@@ -67,9 +83,12 @@ export type GameAction =
       playerId: string;
       card: Card;
       consequenceCards?: Card[];
+      reshuffle?: boolean;
+      generalMarket?: boolean;
     }
   | {
       type: "DRAW_CARD";
       playerId: string;
       cardsDrawn: Card[];
+      reshuffle?: boolean;
     };

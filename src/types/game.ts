@@ -11,6 +11,17 @@ export interface Card {
   number: number;
 }
 
+export interface GameRules {
+  holdOn: boolean;
+  pickTwo: boolean;
+  pickThree: boolean;
+  suspension: boolean;
+  generalMarket: boolean;
+  defendPickThree: boolean;
+  doubleSuspension: boolean;
+  endCondition: "firstToEmpty" | "highestNumberOut";
+}
+
 export interface BaseGameState {
   deck: Card[];
   userCards: Card[];
@@ -20,6 +31,8 @@ export interface BaseGameState {
   whoIsToPlay: PlayerTurn;
   infoText: string;
   infoShown: boolean;
+  rules?: GameRules;
+  activeSuspensions?: number;
 }
 
 export interface Player {
@@ -50,6 +63,10 @@ export interface MultiplayerState {
   viewerId: string;
   isSpectator?: boolean;
   spectators: PlayerSeat[];
+  rules?: GameRules;
+  activeSuspensions?: number;
+  pendingPenalty?: number;
+  penaltyAttackerId?: string;
 }
 
 export interface ChatMessage {
@@ -83,10 +100,13 @@ export type GameAction =
       playerId: string;
       card: Card;
       consequenceCards?: Card[];
+      reshuffle?: boolean;
+      generalMarket?: boolean;
     }
   | {
       type: "DRAW_CARD";
       playerId: string;
       cardsDrawn: Card[];
+      reshuffle?: boolean;
     };
 

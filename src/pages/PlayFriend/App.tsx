@@ -124,11 +124,14 @@ function App() {
       dispatch({ type: "INCREMENT_UNREAD_COUNT" });
     };
 
+    const rules = JSON.parse(localStorage.getItem("whot:friend:rules") || "null");
+
     socket.emit("join_room", {
       room_id: roomId,
       storedId,
       playerCount: preferredCount,
       name: storedName || undefined,
+      rules,
     });
 
     socket.on("dispatch", handleDispatch);

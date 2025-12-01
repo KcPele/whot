@@ -1,14 +1,30 @@
-import React from "react";
+import React, { useState } from "react";
 import "../../styles/home.css";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import mockup from "./assets/mockup.png";
 
 import PlayWithAI from "../../components/PlayWithAI/PlayWithAI";
 import PhoneIllustration from "../../components/Svgs/PhoneIllustration";
+import RulesModal from "../../components/RulesModal/RulesModal";
+import { GameRules } from "../../types/game";
 
 function Home() {
+  const [showRulesModal, setShowRulesModal] = useState(false);
+  const navigate = useNavigate();
+
+  const handleStartGame = (rules: GameRules) => {
+    localStorage.setItem("whot_rules", JSON.stringify(rules));
+    setShowRulesModal(false);
+    navigate("/play-computer");
+  };
+
   return (
     <section className="home">
+      <RulesModal
+        isOpen={showRulesModal}
+        onClose={() => setShowRulesModal(false)}
+        onStartGame={handleStartGame}
+      />
       <div className="shapes">
         <div className="circle">
          <PhoneIllustration />
@@ -46,9 +62,12 @@ function Home() {
         <div className="btn-group">
           <Link to="/copylink">PLAY FRIEND</Link>
           <p>OR</p>
-          <Link to="/play-computer">PLAY COMPUTER</Link>
+          <button onClick={() => setShowRulesModal(true)}>PLAY COMPUTER</button>
           <p>OR</p>
           <PlayWithAI />
+          <Link to="/how-to-play" className="how-to-play-link">
+            HOW TO PLAY
+          </Link>
         </div>
       </main>
     </section>
