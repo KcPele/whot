@@ -121,6 +121,15 @@ const useMultiplayerActions = () => {
        return card.number === 5;
     }
 
+    // Check for Hold On Play Any rule
+    const activeRules = resolvedState.rules;
+    if (
+      activeRules?.holdOnPlayAny &&
+      resolvedState.activeCard.number === 1
+    ) {
+      return true;
+    }
+
     return (
       card.number === resolvedState.activeCard.number ||
       card.shape === resolvedState.activeCard.shape

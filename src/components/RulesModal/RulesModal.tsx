@@ -18,6 +18,7 @@ const defaultRules: GameRules = {
   generalMarket: true,
   defendPickThree: false,
   doubleSuspension: false,
+  holdOnPlayAny: false,
   endCondition: "firstToEmpty",
 };
 
@@ -135,17 +136,28 @@ const RulesModal: React.FC<RulesModalProps> = ({
             <>
               <div className="divider"></div>
 
-              <label className="rule-item">
-                <input
-                  type="checkbox"
-                  checked={rules.doubleSuspension}
-                  onChange={() => handleToggle("doubleSuspension")}
-                />
-                <span>
-                  <strong>Double Suspension:</strong> If enabled, playing multiple
-                  8s skips successive players.
-                </span>
-              </label>
+                <label className="rule-item">
+                  <input
+                    type="checkbox"
+                    checked={rules.doubleSuspension}
+                    onChange={() => handleToggle("doubleSuspension")}
+                  />
+                  <span>
+                    <strong>Double Suspension:</strong> If enabled, playing multiple
+                    8s skips successive players.
+                  </span>
+                </label>
+
+                <label className="rule-item">
+                  <input
+                    type="checkbox"
+                    checked={rules.holdOnPlayAny}
+                    onChange={() => handleToggle("holdOnPlayAny")}
+                  />
+                  <span>
+                    <strong>Hold On Play Any:</strong> If enabled, after playing Card 1, you can play ANY card.
+                  </span>
+                </label>
 
               <div className="rule-group">
                 <p className="group-title">End Condition:</p>

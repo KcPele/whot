@@ -42,6 +42,7 @@ export interface GameRules {
   generalMarket: boolean;
   defendPickThree: boolean;
   doubleSuspension: boolean;
+  holdOnPlayAny: boolean;
   endCondition: "firstToEmpty" | "highestNumberOut";
 }
 
