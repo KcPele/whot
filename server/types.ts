@@ -1,4 +1,5 @@
 import Card from "./utils/classes/Card";
+export { Card };
 
 export type Shape = 'circle' | 'triangle' | 'cross' | 'square' | 'star';
 

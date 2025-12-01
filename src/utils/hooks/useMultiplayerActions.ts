@@ -139,9 +139,7 @@ const useMultiplayerActions = () => {
       consequenceCards = result.cards;
       if (result.reshuffle) reshuffle = true;
     } else if (card.number === 5) {
-      const currentPenalty = resolvedState.pendingPenalty || 0;
-      const count = 3 + currentPenalty;
-      const result = generateRandomCards(resolvedState, count, [card]);
+      const result = generateRandomCards(resolvedState, 3, [card]);
       consequenceCards = result.cards;
       if (result.reshuffle) reshuffle = true;
     } else if (card.number === 14) {
@@ -168,6 +166,8 @@ const useMultiplayerActions = () => {
   const drawCard = () => {
     if (!viewer || state.isSpectator || !isViewersTurn) return;
     
+    // If there is a pending penalty, we draw that amount.
+    // Otherwise we draw 1.
     const count = (resolvedState.pendingPenalty && resolvedState.pendingPenalty > 0) 
       ? resolvedState.pendingPenalty 
       : 1;

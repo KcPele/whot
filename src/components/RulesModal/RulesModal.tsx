@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import UiDialog from "../ui/ui-dialog";
 import { GameRules } from "../../types/game";
 import "../../styles/home.css";
