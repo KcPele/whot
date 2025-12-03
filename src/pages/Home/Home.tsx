@@ -27,7 +27,7 @@ function Home() {
       />
       <div className="shapes">
         <div className="circle">
-         <PhoneIllustration />
+          <PhoneIllustration />
         </div>
         <div className="lines">
           <svg
@@ -60,7 +60,7 @@ function Home() {
           <img src={mockup} alt="mockup" />
         </div>
         <div className="btn-group">
-          <Link to="/copylink">PLAY FRIEND</Link>
+          <Link to="/copylink">Multiplayer Game</Link>
           <p>OR</p>
           <button onClick={() => setShowRulesModal(true)}>PLAY COMPUTER</button>
           <p>OR</p>

@@ -26,6 +26,12 @@
     cursor: not-allowed;
   }
 
+  &.selected {
+    .front {
+      box-shadow: 0 0 0 3px #10b981, 0 4px 12px rgba(16, 185, 129, 0.4);
+    }
+  }
+
   .front,
   .back {
     position: absolute;
@@ -57,6 +63,40 @@
   }
 }
 
+.checkbox {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid #d1d5db;
+  z-index: 10;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  &:hover {
+    border-color: #10b981;
+    transform: scale(1.1);
+  }
+
+  &.checked {
+    background: #10b981;
+    border-color: #10b981;
+    color: white;
+
+    svg {
+      width: 14px;
+      height: 14px;
+    }
+  }
+}
+
 @media screen and (max-width: 650px) {
   .card {
     --width: 80px;
@@ -68,6 +108,18 @@
     .back {
       font-size: 12px;
       border-radius: 3px;
+    }
+  }
+  
+  .checkbox {
+    width: 20px;
+    height: 20px;
+    top: -6px;
+    right: -6px;
+
+    &.checked svg {
+      width: 12px;
+      height: 12px;
     }
   }
 }

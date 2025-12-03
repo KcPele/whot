@@ -22,6 +22,10 @@ const getRules = () => {
     suspension: true,
     generalMarket: true,
     defendPickThree: false,
+    doubleSuspension: false,
+    holdOnPlayAny: false,
+    doubleCards: true,
+    endCondition: "firstToEmpty" as const,
   };
 };
 
@@ -35,6 +39,7 @@ const preloadedState: BaseGameState = {
   infoText: "It's your turn to make a move now",
   infoShown: true,
   rules: getRules(),
+  activeSuspensions: 0,
 };
 
 const store = createStore(

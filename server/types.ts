@@ -42,7 +42,24 @@ export interface GameRules {
   generalMarket: boolean;
   defendPickThree: boolean;
   doubleSuspension: boolean;
+  holdOnPlayAny: boolean;
+  doubleCards: boolean;
   endCondition: "firstToEmpty" | "highestNumberOut";
+}
+
+export interface ScoreSummary {
+  playerId: string;
+  name: string;
+  score: number;
+  isLoser: boolean;
+  isWinner: boolean;
+}
+
+export interface RoundOverPayload {
+  winnerId: string;
+  loserId: string;
+  scores: ScoreSummary[];
+  nextRoundDelay: number; // seconds
 }
 
 export interface MultiplayerState {
@@ -60,6 +77,7 @@ export interface MultiplayerState {
   activeSuspensions?: number;
   pendingPenalty?: number;
   penaltyAttackerId?: string;
+  isRoundOver?: boolean;
 }
 
 export interface Room {
@@ -67,6 +85,8 @@ export interface Room {
   state: MultiplayerState;
   chatHistory: ChatMessage[];
   spectators: PlayerSeat[];
+  allowedPlayerIds: string[];  // Track who is allowed to play (persists across rounds)
+  eliminatedPlayerIds: string[];  // Track who has been eliminated
 }
 
 export interface ChatMessage {

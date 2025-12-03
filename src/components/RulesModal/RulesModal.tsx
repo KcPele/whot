@@ -18,6 +18,8 @@ const defaultRules: GameRules = {
   generalMarket: true,
   defendPickThree: false,
   doubleSuspension: false,
+  holdOnPlayAny: false,
+  doubleCards: true,
   endCondition: "firstToEmpty",
 };
 
@@ -36,7 +38,9 @@ const RulesModal: React.FC<RulesModalProps> = ({
     setRules((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const handleEndConditionChange = (condition: "firstToEmpty" | "highestNumberOut") => {
+  const handleEndConditionChange = (
+    condition: "firstToEmpty" | "highestNumberOut"
+  ) => {
     setRules((prev) => ({ ...prev, endCondition: condition }));
   };
 
@@ -130,6 +134,28 @@ const RulesModal: React.FC<RulesModalProps> = ({
               with another Card 5. (Off by default)
             </span>
           </label>
+          <label className="rule-item">
+            <input
+              type="checkbox"
+              checked={rules.doubleCards}
+              onChange={() => handleToggle("doubleCards")}
+            />
+            <span>
+              <strong>Double Cards:</strong> Play multiple cards with the same
+              number in a single turn. The last card becomes the active card.
+            </span>
+          </label>
+          <label className="rule-item">
+            <input
+              type="checkbox"
+              checked={rules.holdOnPlayAny}
+              onChange={() => handleToggle("holdOnPlayAny")}
+            />
+            <span>
+              <strong>Hold On Play Any:</strong> If enabled, after playing Card
+              1, you can play ANY card.
+            </span>
+          </label>
 
           {isMultiplayer && (
             <>
@@ -142,8 +168,8 @@ const RulesModal: React.FC<RulesModalProps> = ({
                   onChange={() => handleToggle("doubleSuspension")}
                 />
                 <span>
-                  <strong>Double Suspension:</strong> If enabled, playing multiple
-                  8s skips successive players.
+                  <strong>Double Suspension:</strong> If enabled, playing
+                  multiple 8s skips successive players.
                 </span>
               </label>
 
@@ -165,11 +191,14 @@ const RulesModal: React.FC<RulesModalProps> = ({
                     type="radio"
                     name="endCondition"
                     checked={rules.endCondition === "highestNumberOut"}
-                    onChange={() => handleEndConditionChange("highestNumberOut")}
+                    onChange={() =>
+                      handleEndConditionChange("highestNumberOut")
+                    }
                   />
                   <span>
-                    <strong>Highest number out</strong>: When someone empties hand,
-                    others sum cards; highest becomes spectator; game restarts.
+                    <strong>Highest number out</strong>: When someone empties
+                    hand, others sum cards; highest becomes spectator; game
+                    restarts.
                   </span>
                 </label>
               </div>

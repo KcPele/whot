@@ -73,11 +73,17 @@ function App() {
 
   const {
     playCard,
+    playMultipleCards,
     drawCard,
     viewer,
     allOnline,
     isViewersTurn,
     state: multiplayerState,
+    // Double cards
+    shouldShowCheckbox,
+    isCardSelected,
+    handleCardSelect,
+    selectedCards,
   } = useMultiplayerActions();
 
   const maxPlayers = multiplayerState.maxPlayers || 2;
@@ -235,6 +241,12 @@ function App() {
               currentTurnId={multiplayerState.currentTurnId}
               onPlayCard={playCard}
               onRename={handleRename}
+              // Double cards props
+              shouldShowCheckbox={shouldShowCheckbox}
+              isCardSelected={isCardSelected}
+              onCardSelect={handleCardSelect}
+              selectedCards={selectedCards}
+              onPlayMultipleCards={playMultipleCards}
             />
           </div>
         </div>

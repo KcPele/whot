@@ -14,6 +14,12 @@ type PlayerSeatProps = {
   currentTurnId?: string;
   onPlayCard?: (card: Card) => void;
   onRename?: (name: string) => void;
+  // Double cards props
+  shouldShowCheckbox?: (card: Card) => boolean;
+  isCardSelected?: (card: Card) => boolean;
+  onCardSelect?: (card: Card) => void;
+  selectedCards?: Card[];
+  onPlayMultipleCards?: () => void;
 };
 
 const PlayerSeat = ({
@@ -25,11 +31,18 @@ const PlayerSeat = ({
   currentTurnId,
   onPlayCard,
   onRename,
+  shouldShowCheckbox,
+  isCardSelected,
+  onCardSelect,
+  selectedCards = [],
+  onPlayMultipleCards,
 }: PlayerSeatProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [nameValue, setNameValue] = useState(seat?.name || "");
 
   const isTurn = seat && currentTurnId === seat.id;
+  const hasSelection = selectedCards.length > 0;
+  const selectedNumber = selectedCards[0]?.number ?? null;
 
   const handleSaveName = () => {
     if (!onRename || !nameValue.trim()) return;
@@ -86,6 +99,28 @@ const PlayerSeat = ({
       ? styles.horizontal
       : styles.vertical;
 
+  // Handle card click - either select or play
+  const handleCardClick = (card: Card) => {
+    if (!isViewer || !canPlay) return;
+    
+    // If checkbox is shown, use selection mode
+    if (shouldShowCheckbox && shouldShowCheckbox(card) && onCardSelect) {
+      onCardSelect(card);
+      return;
+    }
+    
+    // If in selection mode but clicking a different number, switch selection
+    if (hasSelection && card.number !== selectedNumber && onCardSelect) {
+      onCardSelect(card);
+      return;
+    }
+    
+    // Otherwise, play the card directly
+    if (onPlayCard) {
+      onPlayCard(card);
+    }
+  };
+
   return (
     <div className={`${styles.seat} ${styles[position]}`}>
       {renderName()}
@@ -97,22 +132,30 @@ const PlayerSeat = ({
         }
       >
         <div className={`${styles.cards} ${orientation}`}>
-          {(seat?.cards || []).map((card, index) => (
-            <CardComponent
-              key={`${card.shape}-${card.number}-${
-                seat?.id || "placeholder"
-              }-${index}`}
-              shape={card.shape}
-              number={card.number}
-              isMine={isViewer && !isSpectator}
-              isShown={isViewer && !isSpectator}
-              disableInteraction={!isViewer || !canPlay}
-              onPlay={
-                isViewer && onPlayCard ? () => onPlayCard(card) : undefined
-              }
-              className={isSideSeat ? styles.rotatedCard : ""}
-            />
-          ))}
+          {(seat?.cards || []).map((card, index) => {
+            const showCheckbox = shouldShowCheckbox ? shouldShowCheckbox(card) : false;
+            const isSelected = isCardSelected ? isCardSelected(card) : false;
+            const inSelectionMode = hasSelection && card.number === selectedNumber;
+            
+            return (
+              <CardComponent
+                key={`${card.shape}-${card.number}-${
+                  seat?.id || "placeholder"
+                }-${index}`}
+                shape={card.shape}
+                number={card.number}
+                isMine={isViewer && !isSpectator}
+                isShown={isViewer && !isSpectator}
+                disableInteraction={!isViewer || !canPlay}
+                onPlay={() => handleCardClick(card)}
+                className={isSideSeat ? styles.rotatedCard : ""}
+                showCheckbox={showCheckbox}
+                isSelected={isSelected}
+                onSelect={onCardSelect ? () => onCardSelect(card) : undefined}
+                selectionMode={inSelectionMode}
+              />
+            );
+          })}
           {!seat && (
             <div
               className={`${styles.placeholder} ${
@@ -123,6 +166,15 @@ const PlayerSeat = ({
             </div>
           )}
         </div>
+        {/* Play Cards Button - Floats in middle of cards */}
+        {isViewer && hasSelection && onPlayMultipleCards && (
+          <button
+            className={styles.playCardsBtn}
+            onClick={onPlayMultipleCards}
+          >
+            Play {selectedCards.length}
+          </button>
+        )}
       </div>
     </div>
   );

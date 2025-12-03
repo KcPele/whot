@@ -92,6 +92,8 @@ const createMultiplayerState = (
       generalMarket: true,
       defendPickThree: false,
       doubleSuspension: false,
+      holdOnPlayAny: false,
+      doubleCards: true,
       endCondition: "firstToEmpty",
     },
     activeSuspensions: 0,
