@@ -131,6 +131,8 @@ function UserCards() {
   const handlePlayCards = useCallback(() => {
     if (selectedCards.length === 0) return;
     
+    const cardCount = selectedCards.length;
+    
     // Remove all selected cards from hand
     dispatch(removeMultipleUserCards(selectedCards));
     
@@ -150,20 +152,24 @@ function UserCards() {
       return;
     }
     
-    // Suspension (8) - player gets another turn
+    // Suspension (8) - in 2-player game, opponent is always skipped (user plays again)
     if (number === 8 && rules?.suspension) {
-      dispatch(setInfoText(infoTextValues.opponentSuspended));
+      const suspendMsg = cardCount > 1 && rules?.doubleSuspension 
+        ? `You suspended with ${cardCount} cards!` 
+        : infoTextValues.opponentSuspended;
+      dispatch(setInfoText(suspendMsg));
       return;
     }
     
-    // Pick 2
+    // Pick 2 - stacks with multiple cards
     if (number === 2 && rules?.pickTwo) {
-      goToMarket("opponent", marketConfig, 2);
-      dispatch(setInfoText(infoTextValues.opponentPickedTwo));
+      const pickCount = 2 * cardCount;
+      goToMarket("opponent", marketConfig, pickCount);
+      dispatch(setInfoText(`Opponent picked ${pickCount}!`));
       return;
     }
     
-    // Pick 3
+    // Pick 3 - stacks with multiple cards
     if (number === 5 && rules?.pickThree) {
       const opponentHasDefend = rules?.defendPickThree && 
         opponentCards?.some(c => c.number === 5);
@@ -174,15 +180,16 @@ function UserCards() {
         return;
       }
 
-      goToMarket("opponent", marketConfig, 3);
-      dispatch(setInfoText(infoTextValues.opponentPickedThree));
+      const pickCount = 3 * cardCount;
+      goToMarket("opponent", marketConfig, pickCount);
+      dispatch(setInfoText(`Opponent picked ${pickCount}!`));
       return;
     }
     
-    // General Market (14 = Whot card)
+    // General Market (14 = Whot card) - stacks with multiple cards
     if (number === 14 && rules?.generalMarket) {
-      goToMarket("opponent", marketConfig, 1);
-      dispatch(setInfoText(infoTextValues.opponentReceivedGeneralMarket));
+      goToMarket("opponent", marketConfig, cardCount);
+      dispatch(setInfoText(`Opponent received ${cardCount} from general market!`));
       return;
     }
     
