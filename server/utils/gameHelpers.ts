@@ -47,30 +47,35 @@ export const attachPlayerToState = (
     return { seat: existingSeat, isSpectator: false };
   }
 
-  // If we have an allowed list and player is in it, find them a seat
-  if (allowedPlayerIds && allowedPlayerIds.includes(storedId)) {
-    const openSeat = state.players.find((player) => !player.id);
-    if (openSeat) {
-      openSeat.id = storedId;
-      openSeat.socketId = socketId;
-      openSeat.online = true;
-      if (name) openSeat.name = name;
-      return { seat: openSeat, isSpectator: false };
+  // Check if game is in "locked" mode (eliminations have happened)
+  const gameIsLocked = eliminatedPlayerIds && eliminatedPlayerIds.length > 0;
+
+  if (gameIsLocked) {
+    // After eliminations, only allowed players can rejoin
+    if (allowedPlayerIds && allowedPlayerIds.includes(storedId)) {
+      const openSeat = state.players.find((player) => !player.id);
+      if (openSeat) {
+        openSeat.id = storedId;
+        openSeat.socketId = socketId;
+        openSeat.online = true;
+        if (name) openSeat.name = name;
+        return { seat: openSeat, isSpectator: false };
+      }
     }
-    // No open seat but they're allowed - this shouldn't happen normally
+    // Not in allowed list or no open seat - become spectator
+    return { seat: null, isSpectator: true };
   }
 
-  // If no allowed list (game just started), anyone can take an open seat
-  if (!allowedPlayerIds) {
-    const openSeat = state.players.find((player) => !player.id);
-    if (openSeat) {
-      openSeat.id = storedId;
-      openSeat.socketId = socketId;
-      openSeat.online = true;
-      if (name) openSeat.name = name;
-      return { seat: openSeat, isSpectator: false };
-    }
+  // Game not locked yet - anyone can take an open seat (initial joining phase)
+  const openSeat = state.players.find((player) => !player.id);
+  if (openSeat) {
+    openSeat.id = storedId;
+    openSeat.socketId = socketId;
+    openSeat.online = true;
+    if (name) openSeat.name = name;
+    return { seat: openSeat, isSpectator: false };
   }
 
+  // All seats filled - become spectator
   return { seat: null, isSpectator: true };
 };
