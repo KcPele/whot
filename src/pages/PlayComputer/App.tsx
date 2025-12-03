@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   UserCards,
   ComputerCards,
@@ -18,12 +18,21 @@ function App() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [showEndModal, setShowEndModal] = useState(false);
+  const hasInitialized = useRef(false);
   
   const [activeCard, userCards, opponentCards] = useAppSelector((state) => [
     state.activeCard,
     state.userCards,
     state.opponentCards,
   ]);
+
+  // Reset game on mount to ensure fresh rules are applied
+  useEffect(() => {
+    if (!hasInitialized.current) {
+      hasInitialized.current = true;
+      dispatch(resetGame());
+    }
+  }, [dispatch]);
 
   const handleEndGame = () => {
     setShowEndModal(true);
