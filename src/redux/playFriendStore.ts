@@ -1,6 +1,6 @@
 import { applyMiddleware, createStore } from "redux";
 import type { AnyAction, Middleware, Reducer } from "redux";
-import type { GameState, MultiplayerState, GameAction } from "../types/game";
+import type { GameState, MultiplayerState, GameAction, RoundOverPayload, CardSelection } from "../types/game";
 import { DEFAULT_CARD } from "../types/game";
 import socket from "../socket/socket";
 import {
@@ -13,6 +13,8 @@ type FriendState = GameState &
     viewerId?: string;
     isSpectator?: boolean;
     roomId?: string;
+    roundOverState?: RoundOverPayload;
+    multiplayerCardSelection?: CardSelection;
   };
 
 const getRules = () => {
@@ -32,8 +34,15 @@ const getRules = () => {
     generalMarket: true,
     defendPickThree: false,
     doubleSuspension: false,
+    holdOnPlayAny: false,
+    doubleCards: true,
     endCondition: "firstToEmpty",
   };
+};
+
+const initialCardSelection: CardSelection = {
+  selectedNumber: null,
+  selectedCards: [],
 };
 
 const initialState: FriendState = {
@@ -57,6 +66,8 @@ const initialState: FriendState = {
   roomId: "",
   rules: getRules(),
   activeSuspensions: 0,
+  roundOverState: undefined,
+  multiplayerCardSelection: initialCardSelection,
 };
 
 const reducer: Reducer<FriendState, AnyAction> = (
@@ -69,6 +80,7 @@ const reducer: Reducer<FriendState, AnyAction> = (
         ...state,
         ...(action.payload as Partial<FriendState>),
         stateHasBeenInitialized: true,
+        roundOverState: undefined, // Clear any previous round over state
       };
     case "UPDATE_STATE":
       return {
@@ -77,7 +89,35 @@ const reducer: Reducer<FriendState, AnyAction> = (
         viewerId: state.viewerId,
         isSpectator: state.isSpectator,
         roomId: state.roomId,
+        // Preserve roundOverState unless explicitly updated?
+        // Usually UPDATE_STATE comes from syncStateToRoom.
+        // If server sends UPDATE_STATE, it means game is ongoing or updated.
+        // If we are in round over, we might still get updates?
+        // Let's keep it unless payload overrides it.
       };
+    case "ROUND_OVER":
+      return {
+        ...state,
+        roundOverState: action.payload as RoundOverPayload,
+      };
+    case "NEXT_ROUND_STARTED": {
+      const payload = action.payload as Partial<FriendState>;
+      const viewerId = state.viewerId;
+      
+      // Recalculate if this client is now a spectator based on the new players list
+      const isInPlayers = (payload.players || []).some(p => p.id === viewerId);
+      const isSpectator = !isInPlayers;
+      
+      return {
+        ...state,
+        ...payload,
+        viewerId,        // Preserve viewerId
+        isSpectator,     // Recalculate based on new players list
+        roomId: state.roomId,  // Preserve roomId
+        roundOverState: undefined,
+        multiplayerCardSelection: initialCardSelection, // Clear any card selection
+      };
+    }
     case "SET_LOCAL_STATE":
       return { ...state, ...(action.payload as Partial<FriendState>) };
     case "SET_INFO_TEXT":
@@ -99,15 +139,6 @@ const reducer: Reducer<FriendState, AnyAction> = (
       return { ...state, roomId: action.payload as string };
     case "PERFORM_GAME_ACTION": {
       const gameAction = action.payload as GameAction;
-      // We need to cast state to MultiplayerState to use the utility functions
-      // and then merge the result back.
-      // Note: FriendState has all properties of MultiplayerState (mostly).
-      // We should be careful about properties that might be missing or different.
-      // But based on types, FriendState extends GameState & Partial<MultiplayerState>.
-      // The utility functions expect MultiplayerState.
-      // We can cast state as MultiplayerState if we are sure it has the required fields.
-      // Since stateHasBeenInitialized is true when playing, it should be fine.
-
       let updatedState: MultiplayerState = state as unknown as MultiplayerState;
 
       if (gameAction.type === "PLAY_CARD") {
@@ -128,7 +159,8 @@ const reducer: Reducer<FriendState, AnyAction> = (
         );
       }
 
-      return { ...state, ...updatedState };
+      // Clear selection after playing cards
+      return { ...state, ...updatedState, multiplayerCardSelection: initialCardSelection };
     }
     case "GAME_ACTION": {
       const gameAction = action.payload as GameAction;
@@ -154,6 +186,20 @@ const reducer: Reducer<FriendState, AnyAction> = (
 
       return { ...state, ...updatedState };
     }
+    // Multiplayer card selection actions
+    case "SET_MULTIPLAYER_CARD_SELECTION":
+      return {
+        ...state,
+        multiplayerCardSelection: {
+          selectedNumber: action.payload.selectedNumber,
+          selectedCards: action.payload.selectedCards,
+        },
+      };
+    case "CLEAR_MULTIPLAYER_CARD_SELECTION":
+      return {
+        ...state,
+        multiplayerCardSelection: initialCardSelection,
+      };
     default:
       return state;
   }

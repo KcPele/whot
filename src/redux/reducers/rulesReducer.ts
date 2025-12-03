@@ -9,6 +9,8 @@ const defaultRules: GameRules = {
   generalMarket: true,
   defendPickThree: false,
   doubleSuspension: false,
+  holdOnPlayAny: false,
+  doubleCards: true,
   endCondition: "firstToEmpty",
 };
 

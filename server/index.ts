@@ -119,6 +119,8 @@ io.on("connection", (socket: Socket) => {
           state,
           chatHistory: [],
           spectators: [],
+          allowedPlayerIds: [storedId],  // First player is allowed
+          eliminatedPlayerIds: [],
         };
 
         roomManager.addRoom(currentRoom);
@@ -135,8 +137,15 @@ io.on("connection", (socket: Socket) => {
         state,
         storedId,
         socket.id,
-        name
+        name,
+        currentRoom.allowedPlayerIds,
+        currentRoom.eliminatedPlayerIds
       );
+      
+      // If player got a seat and isn't in allowed list, add them
+      if (seat && !currentRoom.allowedPlayerIds.includes(storedId)) {
+        currentRoom.allowedPlayerIds.push(storedId);
+      }
 
       if (seat && !state.currentTurnId) {
         state.currentTurnId = seat.id;
@@ -202,7 +211,157 @@ io.on("connection", (socket: Socket) => {
   // );
 
   socket.on("game_over", (room_id: string) => {
-    roomManager.removeRoom(room_id);
+    const currentRoom = roomManager.getRoom(room_id);
+    if (!currentRoom) return;
+
+    const { rules } = currentRoom.state;
+
+    if (rules?.endCondition === "highestNumberOut") {
+      // Prevent multiple round over events if already processed
+      if (currentRoom.state.isRoundOver) return;
+
+      currentRoom.state.isRoundOver = true;
+
+      // Calculate scores
+      const scores = currentRoom.state.players
+        .filter((p) => !!p.id)
+        .map((p) => ({
+          playerId: p.id,
+          name: p.name,
+          score: p.cards.reduce((sum, card) => sum + card.number, 0),
+          isLoser: false,
+          isWinner: p.cards.length === 0,
+        }));
+
+      // Find loser (highest score)
+      const maxScore = Math.max(...scores.map((s) => s.score));
+      // If tie, the first player with the max score is eliminated.
+      const loser = scores.find((s) => s.score === maxScore);
+
+      if (loser) {
+        loser.isLoser = true;
+      }
+
+      const payload = {
+        winnerId: scores.find((s) => s.isWinner)?.playerId || "",
+        loserId: loser?.playerId || "",
+        scores,
+        nextRoundDelay: 20,
+      };
+
+      // Store round over state in the room state to persist it for start_next_round
+      // We can attach it to the room object or state. 
+      // Since we added isRoundOver to state, we can also store the payload if needed,
+      // but simpler to just recalculate or trust the first calculation.
+      // Actually, to be safe, let's just rely on isRoundOver to block new game actions,
+      // and let start_next_round use the current state (which hasn't changed).
+
+      io.to(room_id).emit("dispatch", {
+        type: "ROUND_OVER",
+        payload,
+      });
+      
+      syncStateToRoom(currentRoom);
+    } else {
+      roomManager.removeRoom(room_id);
+    }
+  });
+
+  socket.on("start_next_round", (room_id: string) => {
+    const currentRoom = roomManager.getRoom(room_id);
+    if (!currentRoom) return;
+
+    // Only allow restart if round is actually over
+    if (!currentRoom.state.isRoundOver) return;
+
+    const scores = currentRoom.state.players
+        .filter((p) => !!p.id)
+        .map((p) => ({
+          playerId: p.id,
+          score: p.cards.reduce((sum, card) => sum + card.number, 0),
+        }));
+    const maxScore = Math.max(...scores.map((s) => s.score));
+    const loserId = scores.find((s) => s.score === maxScore)?.playerId;
+
+    if (!loserId) return;
+
+    // Move loser to spectators and track elimination
+    const loserSeatIndex = currentRoom.state.players.findIndex(p => p.id === loserId);
+    if (loserSeatIndex !== -1) {
+        const loser = currentRoom.state.players[loserSeatIndex];
+        
+        // Add to eliminated list (so they can't rejoin as player)
+        if (!currentRoom.eliminatedPlayerIds.includes(loserId)) {
+            currentRoom.eliminatedPlayerIds.push(loserId);
+        }
+        
+        // Remove from allowed list
+        currentRoom.allowedPlayerIds = currentRoom.allowedPlayerIds.filter(id => id !== loserId);
+        
+        // Add to spectators
+        if (!currentRoom.state.spectators) currentRoom.state.spectators = [];
+        currentRoom.state.spectators.push({
+            ...loser,
+            seatIndex: 0, // irrelevant
+            cards: [],
+            isSpectator: true
+        });
+        
+        // Remove from players (reset seat)
+        currentRoom.state.players[loserSeatIndex] = {
+            id: "",
+            name: `Player ${loserSeatIndex + 1}`,
+            seatIndex: loserSeatIndex as any,
+            socketId: "",
+            cards: [],
+            online: false
+        };
+    }
+
+    // Re-initialize game for remaining players
+    const activePlayers = currentRoom.state.players.filter(p => !!p.id);
+    
+    console.log("Starting next round with active players:", activePlayers.map(p => ({ id: p.id, name: p.name, online: p.online })));
+    
+    const newState = createMultiplayerState(activePlayers.length, currentRoom.state.rules);
+    
+    // Map active players to new seats - preserve their socket connections and mark online
+    newState.players = newState.players.map((seat, index) => {
+        if (activePlayers[index]) {
+            return {
+                ...seat,
+                id: activePlayers[index].id,
+                name: activePlayers[index].name,
+                socketId: activePlayers[index].socketId,
+                online: true,  // Force online since they're still connected
+                seatIndex: index as any,
+            };
+        }
+        return seat;
+    });
+    
+    // Update maxPlayers to match remaining players
+    newState.maxPlayers = activePlayers.length;
+    
+    // Preserve spectators
+    newState.spectators = currentRoom.state.spectators;
+    
+    // Set current turn to first player
+    newState.currentTurnId = activePlayers[0]?.id || "";
+    newState.stateHasBeenInitialized = true;
+    newState.isRoundOver = false; // Reset round over flag
+    
+    currentRoom.state = newState;
+    updateInfoText(currentRoom.state);
+    
+    console.log("New state players:", newState.players.map(p => ({ id: p.id, name: p.name, online: p.online })));
+    
+    syncStateToRoom(currentRoom);
+    
+    io.to(room_id).emit("dispatch", {
+        type: "NEXT_ROUND_STARTED",
+        payload: currentRoom.state
+    });
   });
 
   socket.on(

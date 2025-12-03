@@ -17,6 +17,25 @@ const userCardsReducer = (state: Card[] = [], action: AnyAction) => {
     );
   }
 
+  if (action.type === "REMOVE_MULTIPLE_USER_CARDS") {
+    const cardsToRemove = action.payload as Card[];
+    let newState = [...state];
+    
+    // Remove each card one at a time (handles duplicates properly)
+    for (const cardToRemove of cardsToRemove) {
+      const index = newState.findIndex(
+        (card) =>
+          card.shape === cardToRemove.shape &&
+          card.number === cardToRemove.number
+      );
+      if (index !== -1) {
+        newState.splice(index, 1);
+      }
+    }
+    
+    return newState;
+  }
+
   return state;
 };
 

@@ -29,8 +29,16 @@ export const attachPlayerToState = (
   state: MultiplayerState,
   storedId: string,
   socketId: string,
-  name?: string
+  name?: string,
+  allowedPlayerIds?: string[],
+  eliminatedPlayerIds?: string[]
 ): { seat: PlayerSeat | null; isSpectator: boolean } => {
+  // If player was eliminated, they can only be a spectator
+  if (eliminatedPlayerIds && eliminatedPlayerIds.includes(storedId)) {
+    return { seat: null, isSpectator: true };
+  }
+
+  // Check if player already has a seat (reconnecting)
   const existingSeat = state.players.find((player) => player.id === storedId);
   if (existingSeat) {
     existingSeat.socketId = socketId;
@@ -39,13 +47,29 @@ export const attachPlayerToState = (
     return { seat: existingSeat, isSpectator: false };
   }
 
-  const openSeat = state.players.find((player) => !player.id);
-  if (openSeat) {
-    openSeat.id = storedId;
-    openSeat.socketId = socketId;
-    openSeat.online = true;
-    if (name) openSeat.name = name;
-    return { seat: openSeat, isSpectator: false };
+  // If we have an allowed list and player is in it, find them a seat
+  if (allowedPlayerIds && allowedPlayerIds.includes(storedId)) {
+    const openSeat = state.players.find((player) => !player.id);
+    if (openSeat) {
+      openSeat.id = storedId;
+      openSeat.socketId = socketId;
+      openSeat.online = true;
+      if (name) openSeat.name = name;
+      return { seat: openSeat, isSpectator: false };
+    }
+    // No open seat but they're allowed - this shouldn't happen normally
+  }
+
+  // If no allowed list (game just started), anyone can take an open seat
+  if (!allowedPlayerIds) {
+    const openSeat = state.players.find((player) => !player.id);
+    if (openSeat) {
+      openSeat.id = storedId;
+      openSeat.socketId = socketId;
+      openSeat.online = true;
+      if (name) openSeat.name = name;
+      return { seat: openSeat, isSpectator: false };
+    }
   }
 
   return { seat: null, isSpectator: true };

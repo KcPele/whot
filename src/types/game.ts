@@ -20,7 +20,28 @@ export interface GameRules {
   defendPickThree: boolean;
   doubleSuspension: boolean;
   holdOnPlayAny: boolean;
+  doubleCards: boolean;
   endCondition: "firstToEmpty" | "highestNumberOut";
+}
+
+export interface CardSelection {
+  selectedNumber: number | null;
+  selectedCards: Card[];
+}
+
+export interface ScoreSummary {
+  playerId: string;
+  name: string;
+  score: number;
+  isLoser: boolean;
+  isWinner: boolean;
+}
+
+export interface RoundOverPayload {
+  winnerId: string;
+  loserId: string;
+  scores: ScoreSummary[];
+  nextRoundDelay: number; // seconds
 }
 
 export interface BaseGameState {
@@ -33,13 +54,19 @@ export interface BaseGameState {
   infoText: string;
   infoShown: boolean;
   rules?: GameRules;
-  activeSuspensions?: number;
+  activeSuspensions: number;
+  roundOverState?: RoundOverPayload;
+  roomId?: string;
+  viewerId?: string;
+  isSpectator?: boolean;
+  isRoundOver?: boolean;
+  cardSelection?: CardSelection;
 }
 
 export interface Player {
   storedId: string;
   socketId: string;
-  player: 'one' | 'two';
+  player: "one" | "two";
 }
 
 export interface PlayerSeat {
@@ -110,4 +137,3 @@ export type GameAction =
       cardsDrawn: Card[];
       reshuffle?: boolean;
     };
-

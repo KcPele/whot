@@ -59,6 +59,7 @@ const playMultiplayerCard = (
     defendPickThree: false,
     doubleSuspension: false,
     holdOnPlayAny: false,
+    doubleCards: true,
     endCondition: "firstToEmpty",
   };
 

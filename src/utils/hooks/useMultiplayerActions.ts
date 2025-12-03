@@ -1,5 +1,6 @@
+import { useCallback, useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import type { Card, MultiplayerState, PlayerSeat } from "../../types/game";
+import type { Card, MultiplayerState, PlayerSeat, CardSelection } from "../../types/game";
 
 import randomCard from "../functions/randomCard";
 
@@ -89,15 +90,16 @@ const useMultiplayerActions = () => {
   const state = useAppSelector((s) => s) as MultiplayerState & {
     viewerId?: string;
     isSpectator?: boolean;
+    multiplayerCardSelection?: CardSelection;
   };
 
-  const resolvedState: MultiplayerState = {
+  const resolvedState: MultiplayerState = useMemo(() => ({
     ...emptyState,
     ...state,
     players: state.players || [],
     usedCards: state.usedCards || [],
     deck: state.deck || [],
-  };
+  }), [state]);
 
   const viewerId = state.viewerId || "";
   const viewer: PlayerSeat | undefined = resolvedState.players.find(
@@ -112,7 +114,36 @@ const useMultiplayerActions = () => {
   const isViewersTurn =
     !!viewer && resolvedState.currentTurnId === viewer.id && allOnline;
 
-  const canPlayCard = (card: Card) => {
+  // Double cards selection state
+  const doubleCardsEnabled = resolvedState.rules?.doubleCards ?? true;
+  const cardSelection = state.multiplayerCardSelection || { selectedNumber: null, selectedCards: [] };
+  const selectedNumber = cardSelection.selectedNumber;
+  const selectedCards = useMemo(
+    () => cardSelection.selectedCards || [],
+    [cardSelection.selectedCards]
+  );
+
+  // Count PLAYABLE cards by number for the viewer
+  const playableCardCounts = useMemo(() => {
+    const counts: Record<number, number> = {};
+    const activeCard = resolvedState.activeCard;
+    const rules = resolvedState.rules;
+    
+    (viewer?.cards || []).forEach((card) => {
+      // Check if this card can be played
+      const canPlay = 
+        card.number === activeCard.number || 
+        card.shape === activeCard.shape ||
+        (rules?.holdOnPlayAny && activeCard.number === 1);
+      
+      if (canPlay) {
+        counts[card.number] = (counts[card.number] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [viewer?.cards, resolvedState.activeCard, resolvedState.rules]);
+
+  const canPlayCard = useCallback((card: Card) => {
     if (!viewer || state.isSpectator) return false;
     if (!isViewersTurn) return false;
     // Check for pending penalty
@@ -134,9 +165,76 @@ const useMultiplayerActions = () => {
       card.number === resolvedState.activeCard.number ||
       card.shape === resolvedState.activeCard.shape
     );
-  };
+  }, [viewer, state.isSpectator, isViewersTurn, resolvedState.pendingPenalty, resolvedState.rules, resolvedState.activeCard]);
 
-  const playCard = (card: Card) => {
+  // Check if a card has playable duplicates (same number)
+  const hasDuplicates = useCallback((card: Card) => {
+    if (!canPlayCard(card)) return false;
+    // Only show checkbox if there are multiple PLAYABLE cards with this number
+    return playableCardCounts[card.number] > 1;
+  }, [playableCardCounts, canPlayCard]);
+
+  // Check if a card is selected
+  const isCardSelected = useCallback((card: Card) => {
+    return selectedCards.some(
+      (c) => c.shape === card.shape && c.number === card.number
+    );
+  }, [selectedCards]);
+
+  // Should show checkbox for a card
+  const shouldShowCheckbox = useCallback((card: Card) => {
+    if (!doubleCardsEnabled) return false;
+    if (!isViewersTurn) return false;
+    if (!canPlayCard(card)) return false;
+    
+    if (selectedNumber === null) {
+      return hasDuplicates(card);
+    }
+    return card.number === selectedNumber;
+  }, [doubleCardsEnabled, isViewersTurn, canPlayCard, selectedNumber, hasDuplicates]);
+
+  // Handle card selection
+  const handleCardSelect = useCallback((card: Card) => {
+    if (!isViewersTurn) return;
+    if (!canPlayCard(card)) return;
+
+    // If selecting a different number, start fresh
+    if (selectedNumber !== null && selectedNumber !== card.number) {
+      dispatch({
+        type: "SET_MULTIPLAYER_CARD_SELECTION",
+        payload: { selectedNumber: card.number, selectedCards: [card] },
+      });
+      return;
+    }
+
+    // If already selected, deselect
+    if (isCardSelected(card)) {
+      const newSelected = selectedCards.filter(
+        (c) => !(c.shape === card.shape && c.number === card.number)
+      );
+      if (newSelected.length === 0) {
+        dispatch({ type: "CLEAR_MULTIPLAYER_CARD_SELECTION" });
+      } else {
+        dispatch({
+          type: "SET_MULTIPLAYER_CARD_SELECTION",
+          payload: { selectedNumber: card.number, selectedCards: newSelected },
+        });
+      }
+      return;
+    }
+
+    // Add to selection
+    dispatch({
+      type: "SET_MULTIPLAYER_CARD_SELECTION",
+      payload: { selectedNumber: card.number, selectedCards: [...selectedCards, card] },
+    });
+  }, [isViewersTurn, canPlayCard, selectedNumber, selectedCards, isCardSelected, dispatch]);
+
+  const clearSelection = useCallback(() => {
+    dispatch({ type: "CLEAR_MULTIPLAYER_CARD_SELECTION" });
+  }, [dispatch]);
+
+  const playCard = useCallback((card: Card) => {
     if (!viewer || state.isSpectator) return;
     if (!canPlayCard(card)) return;
 
@@ -170,9 +268,55 @@ const useMultiplayerActions = () => {
         generalMarket: card.number === 14,
       },
     });
-  };
+  }, [viewer, state.isSpectator, canPlayCard, resolvedState, dispatch]);
 
-  const drawCard = () => {
+  // Play multiple selected cards
+  const playMultipleCards = useCallback(() => {
+    if (!viewer || state.isSpectator) return;
+    if (selectedCards.length === 0) return;
+
+    // Play all selected cards - the last one's effect applies
+    const lastCard = selectedCards[selectedCards.length - 1];
+    
+    // For special cards (2, 5, 14), only the last card's effect applies
+    let consequenceCards: Card[] = [];
+    let reshuffle = false;
+
+    if (lastCard.number === 2) {
+      const result = generateRandomCards(resolvedState, 2, selectedCards);
+      consequenceCards = result.cards;
+      if (result.reshuffle) reshuffle = true;
+    } else if (lastCard.number === 5) {
+      const result = generateRandomCards(resolvedState, 3, selectedCards);
+      consequenceCards = result.cards;
+      if (result.reshuffle) reshuffle = true;
+    } else if (lastCard.number === 14) {
+      const opponentsCount = resolvedState.players.length - 1;
+      const result = generateRandomCards(resolvedState, opponentsCount, selectedCards);
+      consequenceCards = result.cards;
+      if (result.reshuffle) reshuffle = true;
+    }
+
+    // Dispatch all cards to be played - we'll send them as individual actions
+    // but the server processes them sequentially
+    selectedCards.forEach((card, index) => {
+      const isLastCard = index === selectedCards.length - 1;
+      dispatch({
+        type: "PERFORM_GAME_ACTION",
+        payload: {
+          type: "PLAY_CARD",
+          playerId: viewer.id,
+          card,
+          // Only include consequences for the last card
+          consequenceCards: isLastCard ? consequenceCards : [],
+          reshuffle: isLastCard ? reshuffle : false,
+          generalMarket: isLastCard && card.number === 14,
+        },
+      });
+    });
+  }, [viewer, state.isSpectator, selectedCards, resolvedState, dispatch]);
+
+  const drawCard = useCallback(() => {
     if (!viewer || state.isSpectator || !isViewersTurn) return;
     
     // If there is a pending penalty, we draw that amount.
@@ -192,16 +336,26 @@ const useMultiplayerActions = () => {
         reshuffle,
       },
     });
-  };
+  }, [viewer, state.isSpectator, isViewersTurn, resolvedState, dispatch]);
 
   return {
     playCard,
+    playMultipleCards,
     drawCard,
     canPlayCard,
     viewer,
     allOnline,
     isViewersTurn,
     state: resolvedState,
+    // Double cards selection
+    doubleCardsEnabled,
+    selectedNumber,
+    selectedCards,
+    hasDuplicates,
+    isCardSelected,
+    shouldShowCheckbox,
+    handleCardSelect,
+    clearSelection,
   };
 };
 

@@ -26,6 +26,11 @@ type CardComponentProps = {
   disableInteraction?: boolean;
   className?: string;
   style?: React.CSSProperties;
+  // Double cards selection props
+  showCheckbox?: boolean;
+  isSelected?: boolean;
+  onSelect?: () => void;
+  selectionMode?: boolean;
 };
 
 function CardComponent({
@@ -40,15 +45,20 @@ function CardComponent({
   disableInteraction,
   className,
   style: customStyle,
+  showCheckbox,
+  isSelected,
+  onSelect,
+  selectionMode,
 }: CardComponentProps) {
   const [isShownState, setIsShownState] = useState(isShown);
-  const [whoIsToPlay, activeCard, userCards, usedCards, opponentCards] =
+  const [whoIsToPlay, activeCard, userCards, usedCards, opponentCards, rules] =
     useAppSelector((state) => [
       state.whoIsToPlay,
       state.activeCard,
       state.userCards,
       state.usedCards,
       state.opponentCards,
+      state.rules,
     ]);
   const dispatch = useAppDispatch();
   const { market } = useMarket();
@@ -105,6 +115,19 @@ function CardComponent({
 
   const handleClick = () => {
     if (disableInteraction) return;
+    
+    // If checkbox is shown (card has duplicates), delegate to selection
+    if (showCheckbox && onSelect) {
+      onSelect();
+      return;
+    }
+    
+    // If in selection mode but clicking a different card number, delegate to onSelect
+    if (selectionMode && onSelect) {
+      onSelect();
+      return;
+    }
+    
     if (onPlay) {
       onPlay();
       return;
@@ -119,11 +142,20 @@ function CardComponent({
 
     if (!isMine) return;
 
-    if (
-      whoIsToPlay === "user" &&
-      (number === activeCard.number || shape === activeCard.shape)
-    ) {
+    const canPlay = 
+      number === activeCard.number || 
+      shape === activeCard.shape ||
+      (rules?.holdOnPlayAny && activeCard.number === 1);
+
+    if (whoIsToPlay === "user" && canPlay) {
       playUserCard();
+    }
+  };
+  
+  const handleCheckboxClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onSelect) {
+      onSelect();
     }
   };
 
@@ -133,9 +165,21 @@ function CardComponent({
         <div
           className={`${style.card} ${isShownState ? style.shown : ""} ${
             isMine ? style.mine : ""
-          } ${isActiveCard ? "active-card" : ""} ${className || ""}`}
+          } ${isActiveCard ? "active-card" : ""} ${isSelected ? style.selected : ""} ${className || ""}`}
           style={customStyle}
         >
+          {showCheckbox && (
+            <div 
+              className={`${style.checkbox} ${isSelected ? style.checked : ""}`}
+              onClick={handleCheckboxClick}
+            >
+              {isSelected && (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              )}
+            </div>
+          )}
           <div className={style.inner}>
             <div className={style.front}>
               <Number number={number} shape={shape} />
