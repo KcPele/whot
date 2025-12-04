@@ -18,6 +18,7 @@ import { generateRandomCode } from "../../utils/functions/generateRandomCode";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import PlayerSeat from "../../components/Multiplayer/PlayerSeat";
 import SpectatorList from "../../components/Multiplayer/SpectatorList";
+import GameRulesButton from "../../components/Multiplayer/GameRulesButton";
 import useMultiplayerActions from "../../utils/hooks/useMultiplayerActions";
 
 const arrangeSeats = (
@@ -269,6 +270,7 @@ function App() {
           onClick={() => dispatch({ type: "TOGGLE_CHAT" })}
         />
         <SpectatorList spectators={multiplayerState.spectators || []} />
+        <GameRulesButton rules={clientState.rules} />
         {clientState.isSpectator && (
           <div style={{ position: "fixed", top: 20, right: 70, zIndex: 100 }}>
              <PlayerSeat

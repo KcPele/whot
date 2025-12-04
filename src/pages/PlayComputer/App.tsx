@@ -12,6 +12,7 @@ import { useAppSelector, useAppDispatch } from "../../redux/hooks";
 import { useNavigate } from "react-router-dom";
 import { resetGame } from "../../redux/actions";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
+import GameRulesButton from "../../components/Multiplayer/GameRulesButton";
 import "../../index.css";
 
 function App() {
@@ -20,10 +21,11 @@ function App() {
   const [showEndModal, setShowEndModal] = useState(false);
   const hasInitialized = useRef(false);
   
-  const [activeCard, userCards, opponentCards] = useAppSelector((state) => [
+  const [activeCard, userCards, opponentCards, rules] = useAppSelector((state) => [
     state.activeCard,
     state.userCards,
     state.opponentCards,
+    state.rules,
   ]);
 
   // Reset game on mount to ensure fresh rules are applied
@@ -53,6 +55,7 @@ function App() {
         >
           ✕
         </button>
+        <GameRulesButton rules={rules} />
         <ComputerCards />
         <CenterArea />
         <UserCards />
