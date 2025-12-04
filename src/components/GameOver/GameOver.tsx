@@ -11,7 +11,7 @@ function GameOver() {
   const isGameOver = useIsGameOver();
   const [animationHasRun, setAnimationHasRun] = useState(false);
   const roundOverState = useAppSelector((state) => state.roundOverState);
-  const [countdown, setCountdown] = useState(0);
+  const [countdown, setCountdown] = useState<number | null>(null);
 
   const { answer, winner } = isGameOver();
 
@@ -31,11 +31,13 @@ function GameOver() {
   useEffect(() => {
     if (roundOverState) {
       setCountdown(roundOverState.nextRoundDelay);
+    } else {
+      setCountdown(null);
     }
   }, [roundOverState]);
 
   useEffect(() => {
-    if (countdown > 0) {
+    if (countdown !== null && countdown > 0) {
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
       return () => clearTimeout(timer);
     }
@@ -55,7 +57,7 @@ function GameOver() {
         <div className={style.inner} style={{ maxWidth: "500px" }}>
           <p className={style.title}>ROUND OVER</p>
           <p className="text-black" style={{ marginBottom: "1rem" }}>
-            Next round starts in {countdown}s
+            Next round starts in {countdown ?? roundOverState.nextRoundDelay}s
           </p>
 
           <table
