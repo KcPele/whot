@@ -12,7 +12,8 @@ const playMultiplayerCard = (
   card: Card,
   consequenceCards: Card[] = [],
   rules?: GameRules,
-  reshuffle?: boolean
+  reshuffle?: boolean,
+  cardCount?: number // Number of cards being played (for double card effects like Card 8)
 ): MultiplayerState => {
   const player = state.players.find((p) => p.id === playerId);
   if (!player) return state;
@@ -43,7 +44,7 @@ const playMultiplayerCard = (
   // Handle Reshuffle
   if (reshuffle) {
     const cardsInPlay: Card[] = [];
-    players.forEach(p => cardsInPlay.push(...p.cards));
+    players.forEach((p) => cardsInPlay.push(...p.cards));
     cardsInPlay.push(card); // The card just played becomes active
     cardsInPlay.push(...consequenceCards);
     usedCards = cardsInPlay;
@@ -68,19 +69,43 @@ const playMultiplayerCard = (
 
   // Delegate to handlers
   if (card.number === 1) {
-    const result = handleCard1(state, playerId, player, activeRules, activeSuspensions);
+    const result = handleCard1(
+      state,
+      playerId,
+      player,
+      activeRules,
+      activeSuspensions
+    );
     infoText = result.infoText;
     currentTurnId = result.currentTurnId;
     activeSuspensions = result.activeSuspensions;
   } else if (card.number === 2) {
-    const result = handleCard2(state, playerId, player, playersWithoutCard, usedCards, consequenceCards, activeRules, activeSuspensions);
+    const result = handleCard2(
+      state,
+      playerId,
+      player,
+      playersWithoutCard,
+      usedCards,
+      consequenceCards,
+      activeRules,
+      activeSuspensions
+    );
     infoText = result.infoText;
     currentTurnId = result.currentTurnId;
     activeSuspensions = result.activeSuspensions;
     players = result.players;
     usedCards = result.usedCards;
   } else if (card.number === 5) {
-    const result = handleCard5(state, playerId, player, playersWithoutCard, usedCards, consequenceCards, activeRules, activeSuspensions);
+    const result = handleCard5(
+      state,
+      playerId,
+      player,
+      playersWithoutCard,
+      usedCards,
+      consequenceCards,
+      activeRules,
+      activeSuspensions
+    );
     infoText = result.infoText;
     currentTurnId = result.currentTurnId;
     activeSuspensions = result.activeSuspensions;
@@ -94,15 +119,31 @@ const playMultiplayerCard = (
     // 'player' variable still has the OLD cards (before removal).
     // 'playersWithoutCard' has the NEW cards.
     // We should pass the updated player object (from playersWithoutCard) to check for remaining 8s.
-    const updatedPlayer = playersWithoutCard.find(p => p.id === playerId);
+    const updatedPlayer = playersWithoutCard.find((p) => p.id === playerId);
     if (updatedPlayer) {
-        const result = handleCard8(state, playerId, updatedPlayer, activeRules, activeSuspensions);
-        infoText = result.infoText;
-        currentTurnId = result.currentTurnId;
-        activeSuspensions = result.activeSuspensions;
+      const result = handleCard8(
+        state,
+        playerId,
+        updatedPlayer,
+        activeRules,
+        activeSuspensions,
+        cardCount || 1
+      );
+      infoText = result.infoText;
+      currentTurnId = result.currentTurnId;
+      activeSuspensions = result.activeSuspensions;
     }
   } else if (card.number === 14) {
-    const result = handleCard14(state, playerId, player, playersWithoutCard, usedCards, consequenceCards, activeRules, activeSuspensions);
+    const result = handleCard14(
+      state,
+      playerId,
+      player,
+      playersWithoutCard,
+      usedCards,
+      consequenceCards,
+      activeRules,
+      activeSuspensions
+    );
     infoText = result.infoText;
     currentTurnId = result.currentTurnId;
     activeSuspensions = result.activeSuspensions;
@@ -136,33 +177,34 @@ const performDrawAction = (
   reshuffle?: boolean
 ): MultiplayerState => {
   let usedCards = [...state.usedCards];
-  
+
   if (reshuffle) {
     const cardsInPlay: Card[] = [];
-    state.players.forEach(p => cardsInPlay.push(...p.cards));
+    state.players.forEach((p) => cardsInPlay.push(...p.cards));
     cardsInPlay.push(state.activeCard);
     usedCards = cardsInPlay;
   }
 
   const { players, usedCards: updatedUsed } = drawCards(
-    { ...state, usedCards }, 
-    playerId, 
+    { ...state, usedCards },
+    playerId,
     cardsToDraw
   );
-  
+
   let nextPlayerId = "";
   let infoText = "";
   let activeSuspensions = 0;
 
   if (state.pendingPenalty && state.pendingPenalty > 0) {
-    nextPlayerId = state.penaltyAttackerId || getNextPlayerId(state, playerId, 0);
-    if (!state.players.find(p => p.id === nextPlayerId)) {
-       nextPlayerId = getNextPlayerId(state, playerId, 0);
+    nextPlayerId =
+      state.penaltyAttackerId || getNextPlayerId(state, playerId, 0);
+    if (!state.players.find((p) => p.id === nextPlayerId)) {
+      nextPlayerId = getNextPlayerId(state, playerId, 0);
     }
-    
-    const attackerName = state.players.find(p => p.id === nextPlayerId)?.name;
+
+    const attackerName = state.players.find((p) => p.id === nextPlayerId)?.name;
     infoText = `${attackerName || "Attacker"} plays again`;
-    
+
     // Reset penalty
     state.pendingPenalty = 0;
     state.penaltyAttackerId = undefined;

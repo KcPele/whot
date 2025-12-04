@@ -1,6 +1,12 @@
 import { applyMiddleware, createStore } from "redux";
 import type { AnyAction, Middleware, Reducer } from "redux";
-import type { GameState, MultiplayerState, GameAction, RoundOverPayload, CardSelection } from "../types/game";
+import type {
+  GameState,
+  MultiplayerState,
+  GameAction,
+  RoundOverPayload,
+  CardSelection,
+} from "../types/game";
 import { DEFAULT_CARD } from "../types/game";
 import socket from "../socket/socket";
 import {
@@ -82,19 +88,27 @@ const reducer: Reducer<FriendState, AnyAction> = (
         stateHasBeenInitialized: true,
         roundOverState: undefined, // Clear any previous round over state
       };
-    case "UPDATE_STATE":
+    case "UPDATE_STATE": {
+      const updatePayload = action.payload as Partial<FriendState>;
+      const viewerId = state.viewerId;
+
+      // Recalculate isSpectator based on players list if provided
+      let isSpectator = state.isSpectator;
+      if (updatePayload.players && viewerId) {
+        const isInPlayers = updatePayload.players.some(
+          (p) => p.id === viewerId
+        );
+        isSpectator = !isInPlayers;
+      }
+
       return {
         ...state,
-        ...(action.payload as Partial<FriendState>),
-        viewerId: state.viewerId,
-        isSpectator: state.isSpectator,
+        ...updatePayload,
+        viewerId,
+        isSpectator,
         roomId: state.roomId,
-        // Preserve roundOverState unless explicitly updated?
-        // Usually UPDATE_STATE comes from syncStateToRoom.
-        // If server sends UPDATE_STATE, it means game is ongoing or updated.
-        // If we are in round over, we might still get updates?
-        // Let's keep it unless payload overrides it.
       };
+    }
     case "ROUND_OVER":
       return {
         ...state,
@@ -103,17 +117,19 @@ const reducer: Reducer<FriendState, AnyAction> = (
     case "NEXT_ROUND_STARTED": {
       const payload = action.payload as Partial<FriendState>;
       const viewerId = state.viewerId;
-      
+
       // Recalculate if this client is now a spectator based on the new players list
-      const isInPlayers = (payload.players || []).some(p => p.id === viewerId);
+      const isInPlayers = (payload.players || []).some(
+        (p) => p.id === viewerId
+      );
       const isSpectator = !isInPlayers;
-      
+
       return {
         ...state,
         ...payload,
-        viewerId,        // Preserve viewerId
-        isSpectator,     // Recalculate based on new players list
-        roomId: state.roomId,  // Preserve roomId
+        viewerId, // Preserve viewerId
+        isSpectator, // Recalculate based on new players list
+        roomId: state.roomId, // Preserve roomId
         roundOverState: undefined,
         multiplayerCardSelection: initialCardSelection, // Clear any card selection
       };
@@ -150,6 +166,22 @@ const reducer: Reducer<FriendState, AnyAction> = (
           state.rules,
           gameAction.reshuffle
         );
+      } else if (gameAction.type === "PLAY_MULTIPLE_CARDS") {
+        // Handle multiple cards - process each card, pass cardCount to last one
+        const { playerId, cards, consequenceCards, reshuffle, cardCount } =
+          gameAction;
+        cards.forEach((card, index) => {
+          const isLastCard = index === cards.length - 1;
+          updatedState = playMultiplayerCard(
+            updatedState,
+            playerId,
+            card,
+            isLastCard ? consequenceCards : [],
+            state.rules,
+            isLastCard ? reshuffle : false,
+            isLastCard ? cardCount : undefined
+          );
+        });
       } else if (gameAction.type === "DRAW_CARD") {
         updatedState = performDrawAction(
           updatedState,
@@ -160,7 +192,11 @@ const reducer: Reducer<FriendState, AnyAction> = (
       }
 
       // Clear selection after playing cards
-      return { ...state, ...updatedState, multiplayerCardSelection: initialCardSelection };
+      return {
+        ...state,
+        ...updatedState,
+        multiplayerCardSelection: initialCardSelection,
+      };
     }
     case "GAME_ACTION": {
       const gameAction = action.payload as GameAction;
@@ -175,6 +211,22 @@ const reducer: Reducer<FriendState, AnyAction> = (
           state.rules,
           gameAction.reshuffle
         );
+      } else if (gameAction.type === "PLAY_MULTIPLE_CARDS") {
+        // Handle multiple cards - process each card, pass cardCount to last one
+        const { playerId, cards, consequenceCards, reshuffle, cardCount } =
+          gameAction;
+        cards.forEach((card, index) => {
+          const isLastCard = index === cards.length - 1;
+          updatedState = playMultiplayerCard(
+            updatedState,
+            playerId,
+            card,
+            isLastCard ? consequenceCards : [],
+            state.rules,
+            isLastCard ? reshuffle : false,
+            isLastCard ? cardCount : undefined
+          );
+        });
       } else if (gameAction.type === "DRAW_CARD") {
         updatedState = performDrawAction(
           updatedState,

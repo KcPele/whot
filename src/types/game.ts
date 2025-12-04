@@ -132,6 +132,15 @@ export type GameAction =
       generalMarket?: boolean;
     }
   | {
+      type: "PLAY_MULTIPLE_CARDS";
+      playerId: string;
+      cards: Card[];
+      consequenceCards?: Card[];
+      reshuffle?: boolean;
+      generalMarket?: boolean;
+      cardCount: number;
+    }
+  | {
       type: "DRAW_CARD";
       playerId: string;
       cardsDrawn: Card[];

@@ -138,22 +138,22 @@ const PlayerSeat = ({
             const inSelectionMode = hasSelection && card.number === selectedNumber;
             
             return (
-              <CardComponent
-                key={`${card.shape}-${card.number}-${
-                  seat?.id || "placeholder"
-                }-${index}`}
-                shape={card.shape}
-                number={card.number}
-                isMine={isViewer && !isSpectator}
-                isShown={isViewer && !isSpectator}
-                disableInteraction={!isViewer || !canPlay}
+            <CardComponent
+              key={`${card.shape}-${card.number}-${
+                seat?.id || "placeholder"
+              }-${index}`}
+              shape={card.shape}
+              number={card.number}
+              isMine={isViewer && !isSpectator}
+              isShown={isViewer && !isSpectator}
+              disableInteraction={!isViewer || !canPlay}
                 onPlay={() => handleCardClick(card)}
-                className={isSideSeat ? styles.rotatedCard : ""}
+              className={isSideSeat ? styles.rotatedCard : ""}
                 showCheckbox={showCheckbox}
                 isSelected={isSelected}
                 onSelect={onCardSelect ? () => onCardSelect(card) : undefined}
                 selectionMode={inSelectionMode}
-              />
+            />
             );
           })}
           {!seat && (

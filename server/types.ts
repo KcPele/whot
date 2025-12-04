@@ -1,7 +1,7 @@
 import Card from "./utils/classes/Card";
 export { Card };
 
-export type Shape = 'circle' | 'triangle' | 'cross' | 'square' | 'star';
+export type Shape = "circle" | "triangle" | "cross" | "square" | "star";
 
 export interface PlayerState {
   deck: Card[];
@@ -9,17 +9,17 @@ export interface PlayerState {
   usedCards: Card[];
   opponentCards: Card[];
   activeCard: Card;
-  whoIsToPlay: 'user' | 'opponent';
+  whoIsToPlay: "user" | "opponent";
   infoText: string;
   infoShown: boolean;
   stateHasBeenInitialized: boolean;
-  player: 'one' | 'two';
+  player: "one" | "two";
 }
 
 export interface Player {
   storedId: string;
   socketId: string;
-  player: 'one' | 'two';
+  player: "one" | "two";
 }
 
 export type SeatIndex = 0 | 1 | 2 | 3;
@@ -85,8 +85,8 @@ export interface Room {
   state: MultiplayerState;
   chatHistory: ChatMessage[];
   spectators: PlayerSeat[];
-  allowedPlayerIds: string[];  // Track who is allowed to play (persists across rounds)
-  eliminatedPlayerIds: string[];  // Track who has been eliminated
+  allowedPlayerIds: string[]; // Track who is allowed to play (persists across rounds)
+  eliminatedPlayerIds: string[]; // Track who has been eliminated
 }
 
 export interface ChatMessage {
@@ -105,6 +105,15 @@ export type GameAction =
       consequenceCards?: Card[];
       reshuffle?: boolean;
       generalMarket?: boolean;
+    }
+  | {
+      type: "PLAY_MULTIPLE_CARDS";
+      playerId: string;
+      cards: Card[];
+      consequenceCards?: Card[];
+      reshuffle?: boolean;
+      generalMarket?: boolean;
+      cardCount: number;
     }
   | {
       type: "DRAW_CARD";

@@ -12,7 +12,8 @@ const playMultiplayerCard = (
   card: Card,
   consequenceCards: Card[] = [],
   rules?: GameRules,
-  reshuffle?: boolean
+  reshuffle?: boolean,
+  cardCount?: number // Number of cards being played (for double card effects like Card 8)
 ): MultiplayerState => {
   const player = state.players.find((p) => p.id === playerId);
   if (!player) return state;
@@ -120,7 +121,8 @@ const playMultiplayerCard = (
         playerId,
         updatedPlayer,
         activeRules,
-        activeSuspensions
+        activeSuspensions,
+        cardCount || 1 // Pass cardCount for double suspension
       );
       infoText = result.infoText;
       currentTurnId = result.currentTurnId;
