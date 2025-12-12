@@ -51,6 +51,12 @@ function GameOver() {
     }
   }, [countdown, roundOverState, roomId]);
 
+  const handlePlayAgain = () => {
+    // Reload the page to fully reset the game
+    // The rules from localStorage will be loaded fresh on reload
+    window.location.reload();
+  };
+
   if (roundOverState) {
     return (
       <div className={style.game_over}>
@@ -113,9 +119,7 @@ function GameOver() {
         <p className={style.title}>{title}</p>
         <p className="text-black">{subtitle}</p>
         <button
-          onClick={() => {
-            window.location.reload();
-          }}
+          onClick={handlePlayAgain}
           className={style.btn}
         >
           PLAY AGAIN
