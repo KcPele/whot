@@ -2,32 +2,10 @@ import { createStore } from "redux";
 import combinedReducer from "./reducers";
 import initializeDeck from "../utils/functions/initializeDeck";
 import type { BaseGameState } from "../types/game";
+import { getRulesFromStorage } from "../constants/rules";
 
 const { deck, userCards, usedCards, opponentCards, activeCard } =
   initializeDeck();
-
-const getRules = () => {
-  try {
-    const rules = localStorage.getItem("whot_rules");
-    if (rules) {
-      return JSON.parse(rules);
-    }
-  } catch (e) {
-    console.error("Failed to parse rules", e);
-  }
-  return {
-    holdOn: true,
-    pickTwo: true,
-    pickThree: true,
-    suspension: true,
-    generalMarket: true,
-    defendPickThree: false,
-    doubleSuspension: false,
-    holdOnPlayAny: false,
-    doubleCards: true,
-    endCondition: "firstToEmpty" as const,
-  };
-};
 
 const preloadedState: BaseGameState = {
   deck,
@@ -38,7 +16,7 @@ const preloadedState: BaseGameState = {
   whoIsToPlay: "user",
   infoText: "It's your turn to make a move now",
   infoShown: true,
-  rules: getRules(),
+  rules: getRulesFromStorage(),
   activeSuspensions: 0,
 };
 

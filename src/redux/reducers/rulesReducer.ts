@@ -1,21 +1,9 @@
 import { AnyAction, Reducer } from "redux";
 import { GameRules } from "../../types/game";
-
-const defaultRules: GameRules = {
-  holdOn: true,
-  pickTwo: true,
-  pickThree: true,
-  suspension: true,
-  generalMarket: true,
-  defendPickThree: false,
-  doubleSuspension: false,
-  holdOnPlayAny: false,
-  doubleCards: true,
-  endCondition: "firstToEmpty",
-};
+import { DEFAULT_RULES } from "../../constants/rules";
 
 const rulesReducer: Reducer<GameRules, AnyAction> = (
-  state = defaultRules,
+  state = DEFAULT_RULES,
   action
 ) => {
   return state;
