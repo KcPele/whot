@@ -13,6 +13,7 @@ import {
   playMultiplayerCard,
   performDrawAction,
 } from "../utils/functions/playMultiplayerCard";
+import { getRulesFromStorage } from "../constants/rules";
 
 type FriendState = GameState &
   Partial<MultiplayerState> & {
@@ -22,29 +23,6 @@ type FriendState = GameState &
     roundOverState?: RoundOverPayload;
     multiplayerCardSelection?: CardSelection;
   };
-
-const getRules = () => {
-  try {
-    const rules = localStorage.getItem("whot:friend:rules");
-    if (rules) {
-      return JSON.parse(rules);
-    }
-  } catch (e) {
-    console.error("Failed to parse rules", e);
-  }
-  return {
-    holdOn: true,
-    pickTwo: true,
-    pickThree: true,
-    suspension: true,
-    generalMarket: true,
-    defendPickThree: false,
-    doubleSuspension: false,
-    holdOnPlayAny: false,
-    doubleCards: true,
-    endCondition: "firstToEmpty",
-  };
-};
 
 const initialCardSelection: CardSelection = {
   selectedNumber: null,
@@ -70,7 +48,7 @@ const initialState: FriendState = {
   unreadCount: 0,
   spectators: [],
   roomId: "",
-  rules: getRules(),
+  rules: getRulesFromStorage(),
   activeSuspensions: 0,
   roundOverState: undefined,
   multiplayerCardSelection: initialCardSelection,

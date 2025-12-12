@@ -215,23 +215,6 @@ io.on("connection", (socket: Socket) => {
     }
   );
 
-  // socket.on(
-  //   "sendUpdatedState",
-  //   (updatedState: MultiplayerState & { viewerId?: string; isSpectator?: boolean }, room_id: string) => {
-  //     rooms = rooms.map((room) => {
-  //       if (room.room_id === room_id) {
-  //         return { ...room, state: updatedState };
-  //       }
-  //       return room;
-  //     });
-  //
-  //     io.to(room_id).emit("dispatch", {
-  //       type: "UPDATE_STATE",
-  //       payload: updatedState,
-  //     });
-  //   }
-  // );
-
   socket.on("game_over", (room_id: string) => {
     const currentRoom = roomManager.getRoom(room_id);
     if (!currentRoom) return;

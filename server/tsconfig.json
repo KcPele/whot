@@ -3,12 +3,17 @@
     "target": "es2016",
     "module": "commonjs",
     "outDir": "./dist",
-    "rootDir": "./",
+    "rootDir": "../",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": "..",
+    "paths": {
+      "@shared/*": ["src/shared/*"]
+    }
   },
-  "include": ["./**/*.ts"],
+  "include": ["./**/*.ts", "../src/shared/**/*.ts"],
   "exclude": ["node_modules"]
 }
+
