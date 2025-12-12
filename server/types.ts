@@ -24,4 +24,3 @@ export type { Card } from "../src/shared/types";
 import CardClass from "../src/shared/classes/Card";
 export { CardClass };
 export default CardClass;
-
