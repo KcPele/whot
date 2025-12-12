@@ -2,10 +2,10 @@
   "name": "whot-server",
   "version": "1.0.0",
   "type": "commonjs",
-  "main": "index.js",
+  "main": "dist/server/index.js",
   "scripts": {
-    "start": "node dist/index.js",
     "build": "tsc",
+    "start": "node dist/server/index.js",
     "dev": "ts-node index.ts"
   },
   "dependencies": {
