@@ -24,6 +24,7 @@ envPaths.forEach((envPath) => {
 const allowedOrigins = [
   process.env.APP_FRONTEND_URL || "http://localhost:3000",
   "http://localhost:3000",
+  "http://localhost:8080",
 ];
 
 console.log("Allowed origins:", allowedOrigins);
@@ -32,9 +33,8 @@ const PORT = process.env.PORT || 8080;
 
 const io = new Server(Number(PORT), {
   cors: {
-    origin: allowedOrigins as [],
+    origin: "*",
     methods: ["GET", "POST"],
-    credentials: true,
   },
 });
 
