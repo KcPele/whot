@@ -51,6 +51,7 @@ const httpServer = createServer((req, res) => {
 });
 
 const io = new Server(httpServer, {
+  transports: ["websocket"],
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
