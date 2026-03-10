@@ -33,6 +33,8 @@ const PORT = process.env.PORT || 8080;
 const io = new Server(Number(PORT), {
   cors: {
     origin: allowedOrigins as [],
+    methods: ["GET", "POST"],
+    credentials: true,
   },
 });
 
