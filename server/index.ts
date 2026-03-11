@@ -48,6 +48,12 @@ const httpServer = createServer((req, res) => {
     res.end();
     return;
   }
+
+  if (req.url === "/health") {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ status: "ok", port: PORT }));
+    return;
+  }
 });
 
 const io = new Server(httpServer, {
