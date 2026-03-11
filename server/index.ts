@@ -2,7 +2,6 @@ import "dotenv/config";
 import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
-import { createServer } from "http";
 import { Server, Socket } from "socket.io";
 import createMultiplayerState from "./utils/functions/createMultiplayerState";
 import { Room, ChatMessage, GameAction, Card } from "./types";
@@ -32,34 +31,9 @@ console.log("Allowed origins:", allowedOrigins);
 
 const PORT = process.env.PORT || 8080;
 
-const httpServer = createServer((req, res) => {
-  const origin = req.headers.origin;
-  if (origin && allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-  } else {
-    res.setHeader("Access-Control-Allow-Origin", "*");
-  }
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  res.setHeader("Access-Control-Allow-Credentials", "true");
-
-  if (req.method === "OPTIONS") {
-    res.writeHead(204);
-    res.end();
-    return;
-  }
-
-  if (req.url === "/health") {
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ status: "ok", port: PORT }));
-    return;
-  }
-});
-
-const io = new Server(httpServer, {
-  transports: ["websocket"],
+const io = new Server(Number(PORT), {
   cors: {
-    origin: "*",
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -477,6 +451,4 @@ io.on("connection", (socket: Socket) => {
   });
 });
 
-httpServer.listen(Number(PORT), () => {
-  console.log(`Server started on port ${PORT}`);
-});
+console.log(`Server started on port ${PORT}`);
